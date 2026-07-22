@@ -15,9 +15,27 @@ part 'search_bloc.freezed.dart';
 part 'search_event.dart';
 part 'search_state.dart';
 
-EventTransformer<E> debounceRestartable<E>(Duration duration) {
+EventTransformer<E> debounceRestartable<E>(
+  Duration duration, {
+  int Function()? cancellationToken,
+  int Function(E event)? eventCancellationToken,
+}) {
+  final currentCancellationToken = cancellationToken ?? () => 0;
   return (events, mapper) => restartable<E>().call(
-    events.debounce(duration),
+    events
+        .map(
+          (event) => (
+            event: event,
+            cancellationToken:
+                eventCancellationToken?.call(event) ??
+                currentCancellationToken(),
+          ),
+        )
+        .debounce(duration)
+        .where(
+          (pending) => pending.cancellationToken == currentCancellationToken(),
+        )
+        .map((pending) => pending.event),
     mapper,
   );
 }
@@ -28,7 +46,12 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
       super(const SearchState()) {
     on<SearchQueryChanged>(
       _onQueryChanged,
-      transformer: debounceRestartable(const Duration(milliseconds: 450)),
+      transformer: debounceRestartable(
+        const Duration(milliseconds: 450),
+        cancellationToken: () => _passiveSearchCancellationToken,
+        eventCancellationToken: (event) =>
+            _passiveSearchEventTokens[event] ?? _passiveSearchCancellationToken,
+      ),
     );
     on<SearchSubmitted>(_onSubmitted);
     on<SearchLoadNextPage>(_onLoadNextPage, transformer: droppable());
@@ -37,7 +60,19 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
   }
 
   final SearchRepositories _searchRepositories;
+  final Expando<int> _passiveSearchEventTokens = Expando<int>();
   int _requestId = 0;
+  int _passiveSearchCancellationToken = 0;
+
+  @override
+  void onEvent(SearchEvent event) {
+    super.onEvent(event);
+    if (event is SearchQueryChanged) {
+      _passiveSearchEventTokens[event] = _passiveSearchCancellationToken;
+    } else if (event is SearchSubmitted) {
+      _passiveSearchCancellationToken++;
+    }
+  }
 
   Future<void> _onQueryChanged(
     SearchQueryChanged event,

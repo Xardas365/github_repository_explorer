@@ -181,22 +181,47 @@ final class DriftRepositoryLocalDataSource
   @override
   Future<void> prune({required DateTime olderThan}) async {
     try {
-      final oldPages = await (_database.select(
-        _database.searchPages,
-      )..where((row) => row.fetchedAt.isSmallerThanValue(olderThan))).get();
       await _database.transaction(() async {
-        for (final page in oldPages) {
-          await (_database.delete(_database.searchPageItems)..where(
-                (row) =>
-                    row.query.equals(page.query) & row.page.equals(page.page),
-              ))
-              .go();
-          await (_database.delete(_database.searchPages)..where(
-                (row) =>
-                    row.query.equals(page.query) & row.page.equals(page.page),
-              ))
-              .go();
-        }
+        final expiredPage = _database.selectOnly(_database.searchPages)
+          ..addColumns([_database.searchPages.query])
+          ..where(
+            _database.searchPages.query.equalsExp(
+                  _database.searchPageItems.query,
+                ) &
+                _database.searchPages.page.equalsExp(
+                  _database.searchPageItems.page,
+                ) &
+                _database.searchPages.fetchedAt.isSmallerThanValue(olderThan),
+          );
+        await (_database.delete(
+          _database.searchPageItems,
+        )..where((_) => existsQuery(expiredPage))).go();
+        await (_database.delete(_database.searchPages)..where(
+              (row) => row.fetchedAt.isSmallerThanValue(olderThan),
+            ))
+            .go();
+
+        final pageReference = _database.selectOnly(_database.searchPageItems)
+          ..addColumns([_database.searchPageItems.repositoryId])
+          ..where(
+            _database.searchPageItems.repositoryId.equalsExp(
+              _database.cachedRepositories.id,
+            ),
+          );
+        final favoriteReference =
+            _database.selectOnly(_database.favoriteRepositories)
+              ..addColumns([_database.favoriteRepositories.repositoryId])
+              ..where(
+                _database.favoriteRepositories.repositoryId.equalsExp(
+                  _database.cachedRepositories.id,
+                ),
+              );
+        await (_database.delete(_database.cachedRepositories)..where(
+              (_) =>
+                  notExistsQuery(pageReference) &
+                  notExistsQuery(favoriteReference),
+            ))
+            .go();
       });
     } on Object catch (error) {
       throw CacheException('Could not prune cache: $error');

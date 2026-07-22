@@ -1,6 +1,21 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 import 'package:github_repository_explorer/core/error/app_exception.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/dtos/github_search_response_dto.dart';
+
+// GitHub Search API exposes only the first 1,000 results of a search.
+const _githubSearchResultLimit = 1000;
+
+bool _nextPageStartsWithinSearchResultLimit({
+  required int page,
+  required int pageSize,
+  required int totalCount,
+}) {
+  final nextPageStart = page * pageSize + 1;
+  final accessibleTotal = min(totalCount, _githubSearchResultLimit);
+  return nextPageStart <= accessibleTotal;
+}
 
 final class RemoteRepositoryPage {
   const RemoteRepositoryPage({
@@ -48,7 +63,11 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
       final hasNextPage =
           !dto.incompleteResults &&
           dto.items.length == pageSize &&
-          page * pageSize < dto.totalCount;
+          _nextPageStartsWithinSearchResultLimit(
+            page: page,
+            pageSize: pageSize,
+            totalCount: dto.totalCount,
+          );
       return RemoteRepositoryPage(
         repositories: dto.items,
         hasNextPage: hasNextPage,

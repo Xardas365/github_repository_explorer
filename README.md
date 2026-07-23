@@ -202,6 +202,7 @@ dart run flutter_native_splash:create
 ## Quality checks
 
 ```bash
+dart run build_runner build
 dart format --output=none --set-exit-if-changed lib test integration_test
 flutter analyze
 flutter test
@@ -224,6 +225,8 @@ requires an Android emulator or iOS simulator.
 | `go_router` | Stateful tab shell and repository detail navigation |
 | `freezed_annotation`, `json_annotation` | Immutable models and data DTO metadata |
 | `url_launcher` | External GitHub repository links |
+| `flutter_launcher_icons` | Generates Android and iOS launcher icons from the source branding asset |
+| `flutter_native_splash` | Generates light and dark native splash assets |
 | `very_good_analysis` | Strict static-analysis baseline |
 
 Code generation and tests additionally use `build_runner`, `freezed`,
@@ -231,6 +234,8 @@ Code generation and tests additionally use `build_runner`, `freezed`,
 
 ## Known limitations and next steps
 
+- GitHub Search exposes at most the first 1,000 results for a query; pagination
+  deliberately stops at that API window.
 - Unauthenticated GitHub Search API rate limits apply.
 - Android release mode uses debug signing until the delivery environment supplies
   a private release key.

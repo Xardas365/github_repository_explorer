@@ -22,4 +22,31 @@ void main() {
     await tester.tap(find.text('Try again'));
     expect(retried, isTrue);
   });
+
+  testWidgets('keeps retry reachable in a short viewport', (tester) async {
+    tester.view.physicalSize = const Size(800, 180);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var retried = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AppStatePanel(
+          icon: Icons.cloud_off,
+          title: 'Search failed',
+          message: 'Unable to reach GitHub.',
+          actionLabel: 'Try again',
+          onAction: () => retried = true,
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('Try again'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Try again'));
+
+    expect(retried, isTrue);
+  });
 }

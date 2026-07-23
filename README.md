@@ -192,7 +192,7 @@ DTO, or Drift schema changes:
 dart run build_runner build
 ```
 
-Regenerate platform branding after changing `assets/branding/app_icon.png`:
+Regenerate platform branding after changing files in `assets/branding/`:
 
 ```bash
 dart run flutter_launcher_icons

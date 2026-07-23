@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:github_repository_explorer/core/cache/cache_policy.dart';
 import 'package:github_repository_explorer/core/error/app_exception.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/dtos/github_search_response_dto.dart';
 
@@ -36,9 +37,11 @@ abstract interface class GithubRemoteDataSource {
 }
 
 final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
-  const DioGithubRemoteDataSource(this._dio);
+  const DioGithubRemoteDataSource(this._dio, {required Clock clock})
+    : _clock = clock;
 
   final Dio _dio;
+  final Clock _clock;
 
   @override
   Future<RemoteRepositoryPage> search({
@@ -82,18 +85,21 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
   }
 
   AppException _mapDioException(DioException error) {
-    final statusCode = error.response?.statusCode;
+    final response = error.response;
+    final statusCode = response?.statusCode;
     if (statusCode == 403 || statusCode == 429) {
-      final rawReset = error.response?.headers.value('x-ratelimit-reset');
-      final resetSeconds = rawReset == null ? null : int.tryParse(rawReset);
-      return RateLimitException(
-        retryAt: resetSeconds == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(
-                resetSeconds * 1000,
-                isUtc: true,
-              ),
-      );
+      final hasRetryAfter = response?.headers.value('retry-after') != null;
+      final isPrimaryLimit =
+          response?.headers.value('x-ratelimit-remaining')?.trim() == '0';
+      final isSecondaryLimit =
+          statusCode == 429 || _isSecondaryRateLimit(response?.data);
+      if (hasRetryAfter || isPrimaryLimit || isSecondaryLimit) {
+        return RateLimitException(
+          retryAt:
+              _retryAt(response, isPrimaryLimit: isPrimaryLimit) ??
+              _clock.now().toUtc().add(const Duration(minutes: 1)),
+        );
+      }
     }
     if (statusCode != null && statusCode >= 500) {
       return const ServerException();
@@ -105,5 +111,36 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
       return const NetworkException();
     }
     return ServerException(error.message ?? 'GitHub request failed.');
+  }
+
+  DateTime? _retryAt(
+    Response<Object?>? response, {
+    required bool isPrimaryLimit,
+  }) {
+    final rawRetryAfter = response?.headers.value('retry-after')?.trim();
+    final retryAfterSeconds = rawRetryAfter == null
+        ? null
+        : int.tryParse(rawRetryAfter);
+    if (retryAfterSeconds != null && retryAfterSeconds >= 0) {
+      return _clock.now().toUtc().add(Duration(seconds: retryAfterSeconds));
+    }
+    if (!isPrimaryLimit) return null;
+
+    final rawReset = response?.headers.value('x-ratelimit-reset')?.trim();
+    final resetSeconds = rawReset == null ? null : int.tryParse(rawReset);
+    return resetSeconds == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(resetSeconds * 1000, isUtc: true);
+  }
+
+  bool _isSecondaryRateLimit(Object? data) {
+    final text = switch (data) {
+      Map<Object?, Object?>() =>
+        '${data['message'] ?? ''} ${data['documentation_url'] ?? ''}',
+      String() => data,
+      _ => '',
+    }.toLowerCase();
+    return text.contains('secondary rate limit') ||
+        text.contains('secondary-rate-limits');
   }
 }

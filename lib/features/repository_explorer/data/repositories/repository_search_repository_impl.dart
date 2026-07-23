@@ -10,6 +10,8 @@ import 'package:github_repository_explorer/features/repository_explorer/domain/e
 import 'package:github_repository_explorer/features/repository_explorer/domain/entities/repository_search_request.dart';
 import 'package:github_repository_explorer/features/repository_explorer/domain/repositories/repository_search_repository.dart';
 
+const _repositorySearchPageSize = 30;
+
 final class RepositorySearchRepositoryImpl
     implements RepositorySearchRepository {
   RepositorySearchRepositoryImpl({
@@ -61,7 +63,7 @@ final class RepositorySearchRepositoryImpl
       final response = await _remote.search(
         query: request.query,
         page: request.page,
-        pageSize: request.pageSize,
+        pageSize: _repositorySearchPageSize,
       );
       final now = _clock.now();
       final repositories = response.repositories
@@ -77,9 +79,7 @@ final class RepositorySearchRepositoryImpl
       );
       try {
         await _local.writePage(query: request.query, page: cachePage);
-        await _local.prune(
-          olderThan: now.subtract(_cachePolicy.retainFor),
-        );
+        await _local.prune(olderThan: now.subtract(_cachePolicy.retainFor));
       } on Object {
         // A cache write must not hide a valid network response.
       }

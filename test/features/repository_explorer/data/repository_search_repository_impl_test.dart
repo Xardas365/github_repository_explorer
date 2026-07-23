@@ -20,9 +20,7 @@ void main() {
   setUp(() {
     clock = _FakeClock(DateTime.utc(2026, 7, 23, 12));
     local = _FakeLocalDataSource();
-    remote = _FakeRemoteDataSource(
-      (_, _, _) async => _remotePage,
-    );
+    remote = _FakeRemoteDataSource((_, _, _) async => _remotePage);
     repository = RepositorySearchRepositoryImpl(
       remote: remote,
       local: local,
@@ -48,6 +46,20 @@ void main() {
           .having((result) => result.data.isStale, 'isStale', isFalse),
     );
     expect(remote.calls, 0);
+  });
+
+  test('uses the fixed supported page size for remote requests', () async {
+    int? requestedPageSize;
+    remote.handler = (_, _, pageSize) async {
+      requestedPageSize = pageSize;
+      return _remotePage;
+    };
+
+    await repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .drain<void>();
+
+    expect(requestedPageSize, 30);
   });
 
   test('stale cache is emitted before a remote refresh', () async {
@@ -86,10 +98,7 @@ void main() {
 
     final results = await repository
         .search(
-          const RepositorySearchRequest(
-            query: 'flutter',
-            forceRefresh: true,
-          ),
+          const RepositorySearchRequest(query: 'flutter', forceRefresh: true),
         )
         .toList();
 
@@ -182,10 +191,7 @@ void main() {
         .drain<void>();
     await repository
         .search(
-          const RepositorySearchRequest(
-            query: 'dart',
-            forceRefresh: true,
-          ),
+          const RepositorySearchRequest(query: 'dart', forceRefresh: true),
         )
         .drain<void>();
 
@@ -219,10 +225,7 @@ void main() {
 
     final result = await repository
         .search(
-          const RepositorySearchRequest(
-            query: 'dart',
-            forceRefresh: true,
-          ),
+          const RepositorySearchRequest(query: 'dart', forceRefresh: true),
         )
         .single;
 

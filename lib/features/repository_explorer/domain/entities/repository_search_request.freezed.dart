@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RepositorySearchRequest {
 
- String get query; int get page; int get pageSize; bool get forceRefresh;
+ String get query; int get page; bool get forceRefresh;
 /// Create a copy of RepositorySearchRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $RepositorySearchRequestCopyWith<RepositorySearchRequest> get copyWith => _$Repo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RepositorySearchRequest&&(identical(other.query, query) || other.query == query)&&(identical(other.page, page) || other.page == page)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.forceRefresh, forceRefresh) || other.forceRefresh == forceRefresh));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RepositorySearchRequest&&(identical(other.query, query) || other.query == query)&&(identical(other.page, page) || other.page == page)&&(identical(other.forceRefresh, forceRefresh) || other.forceRefresh == forceRefresh));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,query,page,pageSize,forceRefresh);
+int get hashCode => Object.hash(runtimeType,query,page,forceRefresh);
 
 @override
 String toString() {
-  return 'RepositorySearchRequest(query: $query, page: $page, pageSize: $pageSize, forceRefresh: $forceRefresh)';
+  return 'RepositorySearchRequest(query: $query, page: $page, forceRefresh: $forceRefresh)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $RepositorySearchRequestCopyWith<$Res>  {
   factory $RepositorySearchRequestCopyWith(RepositorySearchRequest value, $Res Function(RepositorySearchRequest) _then) = _$RepositorySearchRequestCopyWithImpl;
 @useResult
 $Res call({
- String query, int page, int pageSize, bool forceRefresh
+ String query, int page, bool forceRefresh
 });
 
 
@@ -62,11 +62,10 @@ class _$RepositorySearchRequestCopyWithImpl<$Res>
 
 /// Create a copy of RepositorySearchRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? page = null,Object? pageSize = null,Object? forceRefresh = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? page = null,Object? forceRefresh = null,}) {
   return _then(_self.copyWith(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
-as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int,forceRefresh: null == forceRefresh ? _self.forceRefresh : forceRefresh // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -153,10 +152,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String query,  int page,  int pageSize,  bool forceRefresh)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String query,  int page,  bool forceRefresh)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RepositorySearchRequest() when $default != null:
-return $default(_that.query,_that.page,_that.pageSize,_that.forceRefresh);case _:
+return $default(_that.query,_that.page,_that.forceRefresh);case _:
   return orElse();
 
 }
@@ -174,10 +173,10 @@ return $default(_that.query,_that.page,_that.pageSize,_that.forceRefresh);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String query,  int page,  int pageSize,  bool forceRefresh)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String query,  int page,  bool forceRefresh)  $default,) {final _that = this;
 switch (_that) {
 case _RepositorySearchRequest():
-return $default(_that.query,_that.page,_that.pageSize,_that.forceRefresh);case _:
+return $default(_that.query,_that.page,_that.forceRefresh);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +193,10 @@ return $default(_that.query,_that.page,_that.pageSize,_that.forceRefresh);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String query,  int page,  int pageSize,  bool forceRefresh)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String query,  int page,  bool forceRefresh)?  $default,) {final _that = this;
 switch (_that) {
 case _RepositorySearchRequest() when $default != null:
-return $default(_that.query,_that.page,_that.pageSize,_that.forceRefresh);case _:
+return $default(_that.query,_that.page,_that.forceRefresh);case _:
   return null;
 
 }
@@ -209,12 +208,11 @@ return $default(_that.query,_that.page,_that.pageSize,_that.forceRefresh);case _
 
 
 class _RepositorySearchRequest implements RepositorySearchRequest {
-  const _RepositorySearchRequest({required this.query, this.page = 1, this.pageSize = 30, this.forceRefresh = false});
+  const _RepositorySearchRequest({required this.query, this.page = 1, this.forceRefresh = false});
   
 
 @override final  String query;
 @override@JsonKey() final  int page;
-@override@JsonKey() final  int pageSize;
 @override@JsonKey() final  bool forceRefresh;
 
 /// Create a copy of RepositorySearchRequest
@@ -227,16 +225,16 @@ _$RepositorySearchRequestCopyWith<_RepositorySearchRequest> get copyWith => __$R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RepositorySearchRequest&&(identical(other.query, query) || other.query == query)&&(identical(other.page, page) || other.page == page)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.forceRefresh, forceRefresh) || other.forceRefresh == forceRefresh));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RepositorySearchRequest&&(identical(other.query, query) || other.query == query)&&(identical(other.page, page) || other.page == page)&&(identical(other.forceRefresh, forceRefresh) || other.forceRefresh == forceRefresh));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,query,page,pageSize,forceRefresh);
+int get hashCode => Object.hash(runtimeType,query,page,forceRefresh);
 
 @override
 String toString() {
-  return 'RepositorySearchRequest(query: $query, page: $page, pageSize: $pageSize, forceRefresh: $forceRefresh)';
+  return 'RepositorySearchRequest(query: $query, page: $page, forceRefresh: $forceRefresh)';
 }
 
 
@@ -247,7 +245,7 @@ abstract mixin class _$RepositorySearchRequestCopyWith<$Res> implements $Reposit
   factory _$RepositorySearchRequestCopyWith(_RepositorySearchRequest value, $Res Function(_RepositorySearchRequest) _then) = __$RepositorySearchRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String query, int page, int pageSize, bool forceRefresh
+ String query, int page, bool forceRefresh
 });
 
 
@@ -264,11 +262,10 @@ class __$RepositorySearchRequestCopyWithImpl<$Res>
 
 /// Create a copy of RepositorySearchRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? page = null,Object? pageSize = null,Object? forceRefresh = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? page = null,Object? forceRefresh = null,}) {
   return _then(_RepositorySearchRequest(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
-as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int,forceRefresh: null == forceRefresh ? _self.forceRefresh : forceRefresh // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

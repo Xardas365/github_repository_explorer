@@ -24,13 +24,11 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<Clock>(SystemClock.new)
     ..registerLazySingleton<CachePolicy>(CachePolicy.new)
     ..registerLazySingleton<AppDatabase>(
-      () => AppDatabase(
-        driftDatabase(name: 'github_repository_explorer'),
-      ),
+      () => AppDatabase(driftDatabase(name: 'github_repository_explorer')),
       dispose: (database) => database.close(),
     )
     ..registerLazySingleton<GithubRemoteDataSource>(
-      () => DioGithubRemoteDataSource(getIt()),
+      () => DioGithubRemoteDataSource(getIt(), clock: getIt()),
     )
     ..registerLazySingleton<RepositoryLocalDataSource>(
       () => DriftRepositoryLocalDataSource(getIt()),
@@ -44,10 +42,7 @@ Future<void> configureDependencies() async {
       ),
     )
     ..registerLazySingleton<FavoriteRepositoriesRepository>(
-      () => FavoriteRepositoriesRepositoryImpl(
-        local: getIt(),
-        clock: getIt(),
-      ),
+      () => FavoriteRepositoriesRepositoryImpl(local: getIt(), clock: getIt()),
     )
     ..registerLazySingleton(() => SearchRepositories(getIt()))
     ..registerLazySingleton(() => WatchFavorites(getIt()))

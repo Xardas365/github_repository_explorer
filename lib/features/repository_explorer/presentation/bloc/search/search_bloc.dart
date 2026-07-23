@@ -63,6 +63,9 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
   final Expando<int> _passiveSearchEventTokens = Expando<int>();
   int _requestId = 0;
   int _passiveSearchCancellationToken = 0;
+  String? _activeQuery;
+  int? _activePage;
+  int? _activeRequestId;
 
   @override
   void onEvent(SearchEvent event) {
@@ -145,7 +148,17 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
       return;
     }
 
+    if (!forceRefresh &&
+        _activeRequestId == _requestId &&
+        _activeQuery == normalized &&
+        _activePage == page) {
+      return;
+    }
+
     final requestId = ++_requestId;
+    _activeQuery = normalized;
+    _activePage = page;
+    _activeRequestId = requestId;
     if (page == 1) {
       emit(
         state.copyWith(
@@ -174,56 +187,64 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
       page: page,
       forceRefresh: forceRefresh,
     );
-    await for (final result in _searchRepositories(request)) {
-      if (requestId != _requestId || emit.isDone) return;
-      switch (result) {
-        case Success<RepositoryPage>(:final data):
-          final repositories = page == 1
-              ? data.repositories
-              : _mergeById(state.repositories, data.repositories);
-          emit(
-            state.copyWith(
-              status: repositories.isEmpty
-                  ? SearchStatus.empty
-                  : SearchStatus.success,
-              query: normalized,
-              repositories: repositories,
-              currentPage: data.page,
-              hasReachedEnd: !data.hasNextPage,
-              isLoadingNextPage: false,
-              isRefreshing: false,
-              isFromCache: data.origin == DataOrigin.cache,
-              isStale: data.isStale,
-              fetchedAt: data.fetchedAt,
-              failure: null,
-              refreshFailure: data.refreshFailure,
-              paginationFailure: null,
-            ),
-          );
-        case FailureResult<RepositoryPage>(:final failure):
-          if (page > 1) {
+    try {
+      await for (final result in _searchRepositories(request)) {
+        if (requestId != _requestId || emit.isDone) return;
+        switch (result) {
+          case Success<RepositoryPage>(:final data):
+            final repositories = page == 1
+                ? data.repositories
+                : _mergeById(state.repositories, data.repositories);
             emit(
               state.copyWith(
+                status: repositories.isEmpty
+                    ? SearchStatus.empty
+                    : SearchStatus.success,
+                query: normalized,
+                repositories: repositories,
+                currentPage: data.page,
+                hasReachedEnd: !data.hasNextPage,
                 isLoadingNextPage: false,
-                paginationFailure: failure,
-              ),
-            );
-          } else if (preserveItems && state.repositories.isNotEmpty) {
-            emit(
-              state.copyWith(
                 isRefreshing: false,
-                refreshFailure: failure,
+                isFromCache: data.origin == DataOrigin.cache,
+                isStale: data.isStale,
+                fetchedAt: data.fetchedAt,
+                failure: null,
+                refreshFailure: data.refreshFailure,
+                paginationFailure: null,
               ),
             );
-          } else {
-            emit(
-              state.copyWith(
-                status: SearchStatus.failure,
-                isRefreshing: false,
-                failure: failure,
-              ),
-            );
-          }
+          case FailureResult<RepositoryPage>(:final failure):
+            if (page > 1) {
+              emit(
+                state.copyWith(
+                  isLoadingNextPage: false,
+                  paginationFailure: failure,
+                ),
+              );
+            } else if (preserveItems && state.repositories.isNotEmpty) {
+              emit(
+                state.copyWith(
+                  isRefreshing: false,
+                  refreshFailure: failure,
+                ),
+              );
+            } else {
+              emit(
+                state.copyWith(
+                  status: SearchStatus.failure,
+                  isRefreshing: false,
+                  failure: failure,
+                ),
+              );
+            }
+        }
+      }
+    } finally {
+      if (_activeRequestId == requestId) {
+        _activeQuery = null;
+        _activePage = null;
+        _activeRequestId = null;
       }
     }
   }

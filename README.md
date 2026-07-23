@@ -9,7 +9,7 @@ offline-first reads, adaptive tablet UI, and automated tests.
 ## Product capabilities
 
 - Search public repositories through the GitHub REST API.
-- Debounced search with an explicit submit action and stale-request protection.
+- Debounced search with submit deduplication and stale-request protection.
 - Loading, empty, error, cached, stale, pagination, and refresh UI states.
 - Repository details with stars, forks, open issues, language, and GitHub link.
 - Persistent favorites available without a network connection.
@@ -64,19 +64,24 @@ SOLID decisions. Agent contributors must also follow [AGENTS.md](AGENTS.md) and
 
 ## Offline and cache behavior
 
-Search uses stale-while-revalidate:
+Search uses a freshness-aware stale-while-revalidate policy:
 
 1. A cached page is emitted immediately when available.
-2. The same request is sent to GitHub in the background.
-3. A successful response replaces the cached page in one Drift transaction.
-4. If refresh fails, cached content stays visible with its age and warning.
-5. Without either cache or a network response, the full error state offers retry.
+2. A page no older than 15 minutes satisfies the search without a GitHub request.
+3. A stale page is refreshed from GitHub in the background.
+4. A successful response replaces the cached page in one Drift transaction.
+5. If refresh fails, cached content stays visible with its age and warning.
+6. Without either cache or a network response, the full error state offers retry.
 
 Cached pages become stale after 15 minutes. Search-page relationships older
 than seven days are pruned opportunistically; favorites are retained. Offline
 mode therefore supports favorites and previously visited search pages, not new
 queries or a complete GitHub mirror. Connectivity is inferred from the actual
 request outcome instead of a connectivity-status plugin.
+
+Repeated normalized queries share an in-flight search. After GitHub returns a
+rate-limit reset time, passive requests are suppressed until that time. Explicit
+retry and pull-to-refresh remain available and always attempt the network.
 
 ## State management
 

@@ -169,7 +169,43 @@ void main() {
     expect(remote.calls, 1);
   });
 
-  test('force refresh bypasses an active rate-limit guard', () async {
+  test('a later rate-limit reset is not shortened by an earlier one', () async {
+    final earlierRetryAt = clock.current.add(const Duration(minutes: 1));
+    final laterRetryAt = clock.current.add(const Duration(minutes: 2));
+    remote.handler = (_, _, _) async {
+      throw RateLimitException(
+        retryAt: remote.calls == 1 ? earlierRetryAt : laterRetryAt,
+      );
+    };
+    await repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .drain<void>();
+    await repository
+        .search(
+          const RepositorySearchRequest(
+            query: 'dart',
+            forceRefresh: true,
+          ),
+        )
+        .drain<void>();
+
+    clock.current = earlierRetryAt;
+    final blocked = await repository
+        .search(const RepositorySearchRequest(query: 'kotlin'))
+        .single;
+
+    expect(
+      blocked,
+      isA<FailureResult<RepositoryPage>>().having(
+        (result) => result.failure,
+        'failure',
+        Failure.rateLimited(retryAt: laterRetryAt),
+      ),
+    );
+    expect(remote.calls, 2);
+  });
+
+  test('force refresh bypasses an active guard without clearing it', () async {
     final retryAt = clock.current.add(const Duration(minutes: 1));
     remote.handler = (_, _, _) async {
       if (remote.calls == 1) {
@@ -191,6 +227,20 @@ void main() {
         .single;
 
     expect(result, isA<Success<RepositoryPage>>());
+    expect(remote.calls, 2);
+
+    final blocked = await repository
+        .search(const RepositorySearchRequest(query: 'kotlin'))
+        .single;
+
+    expect(
+      blocked,
+      isA<FailureResult<RepositoryPage>>().having(
+        (result) => result.failure,
+        'failure',
+        Failure.rateLimited(retryAt: retryAt),
+      ),
+    );
     expect(remote.calls, 2);
   });
 }

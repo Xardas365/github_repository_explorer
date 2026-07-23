@@ -63,7 +63,6 @@ final class RepositorySearchRepositoryImpl
         page: request.page,
         pageSize: request.pageSize,
       );
-      _rateLimitedUntil = null;
       final now = _clock.now();
       final repositories = response.repositories
           .map((dto) => dto.toDomain())
@@ -118,8 +117,11 @@ final class RepositorySearchRepositoryImpl
 
   void _rememberRateLimit(Failure failure) {
     if (failure case RateLimitedFailure(retryAt: final retryAt?)) {
-      if (_clock.now().isBefore(retryAt)) {
-        _rateLimitedUntil = retryAt.toUtc();
+      final retryAtUtc = retryAt.toUtc();
+      final current = _rateLimitedUntil;
+      if (_clock.now().isBefore(retryAtUtc) &&
+          (current == null || retryAtUtc.isAfter(current))) {
+        _rateLimitedUntil = retryAtUtc;
       }
     }
   }

@@ -271,6 +271,37 @@ void main() {
     await bloc.close();
   });
 
+  test('submit does not duplicate an in-flight passive search', () async {
+    final results = StreamController<Result<RepositoryPage>>();
+    final called = Completer<void>();
+    when(() => repository.search(any())).thenAnswer((_) {
+      if (!called.isCompleted) {
+        called.complete();
+      }
+      return results.stream;
+    });
+    final bloc = buildBloc()
+      ..add(const SearchEvent.queryChanged('  flutter   bloc  '));
+
+    await called.future.timeout(const Duration(seconds: 1));
+    bloc.add(const SearchEvent.submitted('flutter bloc'));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    final requests = verify(
+      () => repository.search(captureAny()),
+    ).captured.cast<RepositorySearchRequest>();
+    expect(requests, hasLength(1));
+    expect(requests.single.query, 'flutter bloc');
+
+    results.add(Result.success(_page(sampleRepository)));
+    await bloc.stream.firstWhere(
+      (state) => state.status == SearchStatus.success,
+    );
+
+    await results.close();
+    await bloc.close();
+  });
+
   blocTest<SearchBloc, SearchState>(
     'only searches the last of several rapidly typed queries',
     setUp: () {

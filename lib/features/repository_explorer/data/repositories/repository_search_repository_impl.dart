@@ -1,4 +1,5 @@
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
+import 'package:github_repository_explorer/core/error/failure.dart';
 import 'package:github_repository_explorer/core/error/failure_mapper.dart';
 import 'package:github_repository_explorer/core/result/result.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/data_sources/github_remote_data_source.dart';
@@ -11,7 +12,7 @@ import 'package:github_repository_explorer/features/repository_explorer/domain/r
 
 final class RepositorySearchRepositoryImpl
     implements RepositorySearchRepository {
-  const RepositorySearchRepositoryImpl({
+  RepositorySearchRepositoryImpl({
     required GithubRemoteDataSource remote,
     required RepositoryLocalDataSource local,
     required CachePolicy cachePolicy,
@@ -25,6 +26,7 @@ final class RepositorySearchRepositoryImpl
   final RepositoryLocalDataSource _local;
   final CachePolicy _cachePolicy;
   final Clock _clock;
+  DateTime? _rateLimitedUntil;
 
   @override
   Stream<Result<RepositoryPage>> search(
@@ -34,10 +36,25 @@ final class RepositorySearchRepositoryImpl
     try {
       cached = await _local.readPage(query: request.query, page: request.page);
       if (cached != null && !request.forceRefresh) {
-        yield Result.success(_cachedPageToDomain(cached));
+        final cachedPage = _cachedPageToDomain(cached);
+        yield Result.success(cachedPage);
+        if (!cachedPage.isStale) return;
       }
     } on Object {
       cached = null;
+    }
+
+    final blockedUntil = request.forceRefresh ? null : _activeRateLimit();
+    if (blockedUntil != null) {
+      final failure = Failure.rateLimited(retryAt: blockedUntil);
+      if (cached != null) {
+        yield Result.success(
+          _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
+        );
+      } else {
+        yield Result.failure(failure);
+      }
+      return;
     }
 
     try {
@@ -77,12 +94,34 @@ final class RepositorySearchRepositoryImpl
       );
     } on Object catch (error) {
       final failure = mapExceptionToFailure(error);
+      _rememberRateLimit(failure);
       if (cached != null) {
         yield Result.success(
           _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
         );
       } else {
         yield Result.failure(failure);
+      }
+    }
+  }
+
+  DateTime? _activeRateLimit() {
+    final retryAt = _rateLimitedUntil;
+    if (retryAt == null) return null;
+    if (!_clock.now().isBefore(retryAt)) {
+      _rateLimitedUntil = null;
+      return null;
+    }
+    return retryAt;
+  }
+
+  void _rememberRateLimit(Failure failure) {
+    if (failure case RateLimitedFailure(retryAt: final retryAt?)) {
+      final retryAtUtc = retryAt.toUtc();
+      final current = _rateLimitedUntil;
+      if (_clock.now().isBefore(retryAtUtc) &&
+          (current == null || retryAtUtc.isAfter(current))) {
+        _rateLimitedUntil = retryAtUtc;
       }
     }
   }

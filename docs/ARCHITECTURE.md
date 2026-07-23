@@ -40,16 +40,21 @@ sequenceDiagram
   R->>D: read cached page
   D-->>R: cached page?
   R-->>B: cached success (when present)
-  R->>G: fetch current page
-  G-->>R: DTO response or failure
-  R->>D: transactional cache update
-  R-->>B: fresh success or cached warning
+  alt cache is fresh
+    R-->>B: stream completes
+  else cache is stale or refresh is forced
+    R->>G: fetch current page
+    G-->>R: DTO response or failure
+    R->>D: transactional cache update
+    R-->>B: fresh success or cached warning
+  end
   B-->>UI: immutable SearchState
 ```
 
-The repository returns a stream because a single search operation can produce
-two meaningful values: an immediate cached page and a later network page. This
-keeps stale-while-revalidate policy out of the BLoC without hiding intermediate
+The repository returns a stream because a stale search operation can produce
+two meaningful values: an immediate cached page and a later network page. A
+fresh page completes after the cache value, avoiding an unnecessary GitHub
+request. This keeps cache policy out of the BLoC without hiding intermediate
 data behind callbacks.
 
 ## Search state
@@ -72,7 +77,9 @@ remain visible while refresh or pagination is active.
 
 Typing is debounced for 450 ms and processed with restartable concurrency.
 Explicit submit and retry are immediate. A request identifier prevents late
-stream values from a superseded query from updating the current screen.
+stream values from a superseded query from updating the current screen. If an
+explicit submit matches the normalized query and page already in flight, the
+BLoC reuses that search instead of starting a duplicate request.
 
 ## Persistence schema
 
@@ -99,7 +106,9 @@ receives actionable messages without importing transport or persistence types.
 
 Rate-limit responses are distinguished from general server errors. Cached data
 continues to be emitted when a refresh fails. If neither source can satisfy a
-request, the BLoC exposes a full error state with retry.
+request, the BLoC exposes a full error state with retry. A known future reset
+time suppresses passive network requests until the limit should be available
+again; explicit retry and pull-to-refresh bypass that guard.
 
 ## Dependency injection
 

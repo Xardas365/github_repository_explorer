@@ -6,6 +6,7 @@ import 'package:github_repository_explorer/features/repository_explorer/presenta
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/app_state_panel.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/cache_status_banner.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/content_width.dart';
+import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/failure_message.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/repository_card.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/search_input.dart';
 
@@ -166,10 +167,13 @@ final class _SearchResults extends StatelessWidget {
           message: 'Try a broader query or check the spelling.',
         );
       case SearchStatus.failure:
+        final failure = state.failure;
         return AppStatePanel(
           icon: Icons.cloud_off_outlined,
           title: 'Search failed',
-          message: state.failure?.message ?? 'Unable to load repositories.',
+          message: failure == null
+              ? 'Unable to load repositories.'
+              : formatFailureMessage(context, failure),
           actionLabel: 'Try again',
           onAction: () =>
               context.read<SearchBloc>().add(const SearchEvent.retried()),
@@ -235,7 +239,7 @@ final class _PaginationFooter extends StatelessWidget {
           onPressed: () =>
               context.read<SearchBloc>().add(const SearchEvent.retried()),
           icon: const Icon(Icons.refresh),
-          label: Text('${failure.message} Retry'),
+          label: Text('${formatFailureMessage(context, failure)} Retry'),
         ),
       );
     }

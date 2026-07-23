@@ -7,6 +7,9 @@ void main() {
   testWidgets('adds the local reset time to a rate-limit failure', (
     tester,
   ) async {
+    final retryAt = DateTime(2026, 7, 23, 14, 30);
+    late String expectedDate;
+    late String expectedTime;
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en', 'US'),
@@ -15,22 +18,31 @@ void main() {
           child: child ?? const SizedBox.shrink(),
         ),
         home: Builder(
-          builder: (context) => Text(
-            formatFailureMessage(
-              context,
-              Failure.rateLimited(retryAt: DateTime(2026, 7, 23, 14, 30)),
-            ),
-          ),
+          builder: (context) {
+            final localizations = MaterialLocalizations.of(context);
+            expectedDate = localizations.formatMediumDate(retryAt);
+            expectedTime = localizations.formatTimeOfDay(
+              TimeOfDay.fromDateTime(retryAt),
+              alwaysUse24HourFormat: false,
+            );
+            return Text(
+              formatFailureMessage(
+                context,
+                Failure.rateLimited(retryAt: retryAt),
+              ),
+            );
+          },
         ),
       ),
     );
 
     expect(
-      find.textContaining('GitHub request limit reached.'),
+      find.text(
+        'GitHub request limit reached. Please try again later. '
+        'Try again after $expectedDate at $expectedTime.',
+      ),
       findsOneWidget,
     );
-    expect(find.textContaining('Jul 23, 2026'), findsOneWidget);
-    expect(find.textContaining('2:30 PM'), findsOneWidget);
   });
 
   testWidgets('keeps the default message when no reset time is known', (

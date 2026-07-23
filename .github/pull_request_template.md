@@ -11,6 +11,7 @@
 
 ## Verification
 
+- [ ] `dart run build_runner build`
 - [ ] `dart format --output=none --set-exit-if-changed lib test integration_test`
 - [ ] `flutter analyze`
 - [ ] `flutter test`
@@ -18,7 +19,7 @@
 
 ## Accessibility and responsive UI
 
-- [ ] Phone and tablet layouts checked.
+- [ ] Compact (<600), medium/tablet (>=840), and expanded (>=1200) layouts checked.
 - [ ] Light and dark themes checked.
 - [ ] Semantics, focus, text scaling, and non-color status cues checked.
 

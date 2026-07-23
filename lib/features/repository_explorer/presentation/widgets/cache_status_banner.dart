@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:github_repository_explorer/core/error/failure.dart';
+import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/failure_message.dart';
 
 final class CacheStatusBanner extends StatelessWidget {
   const CacheStatusBanner({
@@ -25,8 +26,9 @@ final class CacheStatusBanner extends StatelessWidget {
               '${date.month.toString().padLeft(2, '0')}.'
               '${date.year} ${date.hour.toString().padLeft(2, '0')}:'
               '${date.minute.toString().padLeft(2, '0')}';
-    final message = refreshFailure != null
-        ? 'Showing saved results. ${refreshFailure!.message}'
+    final failure = refreshFailure;
+    final message = failure != null
+        ? 'Showing saved results. ${formatFailureMessage(context, failure)}'
         : isStale
         ? 'Showing saved results from $timestamp while refreshing.'
         : 'Showing saved results while checking for updates.';

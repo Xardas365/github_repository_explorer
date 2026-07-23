@@ -23,6 +23,63 @@ offline-first reads, adaptive tablet UI, and automated tests.
 The app deliberately uses the unauthenticated public API. No GitHub token is
 embedded in the application or expected in source control.
 
+## App preview
+
+The gallery focuses on the primary journey instead of repeating every
+intermediate state: search, repository detail, persistent favorites, and the
+adaptive tablet layout.
+
+<p align="center">
+  <img
+    src="docs/screenshots/search-results-tablet-dark.png"
+    alt="Repository search results in the adaptive dark tablet layout"
+    width="900"
+  >
+</p>
+<p align="center">
+  <strong>Search results</strong> — adaptive tablet navigation and readable
+  content width.
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/repository-detail-phone-dark.png"
+    alt="Repository detail on a phone in dark mode"
+    width="360"
+  >
+</p>
+<p align="center">
+  <strong>Repository detail</strong> — activity, language, favorite, and GitHub
+  link.
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/favorites-tablet-dark.png"
+    alt="Persistent favorites in the adaptive dark tablet layout with the remove action tooltip"
+    width="900"
+  >
+</p>
+<p align="center">
+  <strong>Favorites</strong> — persisted repositories remain available offline,
+  while the tooltip explains the removal action.
+</p>
+
+<details>
+  <summary>Additional recovery state</summary>
+  <p align="center">
+    <img
+      src="docs/screenshots/rate-limit-error-phone-dark.png"
+      alt="GitHub rate-limit error with reset time and retry action"
+      width="360"
+    >
+  </p>
+  <p align="center">
+    A rate-limit failure explains when requests can resume and keeps retry
+    available.
+  </p>
+</details>
+
 ## Screens and responsive behavior
 
 Phones use a bottom `NavigationBar`. At the tablet breakpoint (840 logical

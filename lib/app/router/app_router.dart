@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:github_repository_explorer/app/di/service_locator.dart';
 import 'package:github_repository_explorer/app/router/app_shell.dart';
 import 'package:github_repository_explorer/features/repository_explorer/domain/entities/github_repository.dart';
+import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/search/search_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/pages/favorites_page.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/pages/repository_detail_page.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/pages/search_page.dart';
@@ -22,7 +25,10 @@ abstract final class AppRouter {
               GoRoute(
                 path: '/',
                 name: 'search',
-                builder: (context, state) => const SearchPage(),
+                builder: (context, state) => BlocProvider(
+                  create: (_) => getIt<SearchBloc>(),
+                  child: const SearchPage(),
+                ),
               ),
             ],
           ),

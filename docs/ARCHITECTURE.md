@@ -44,9 +44,14 @@ sequenceDiagram
     R-->>B: stream completes
   else cache is stale or refresh is forced
     R->>G: fetch current page
-    G-->>R: DTO response or failure
-    R->>D: transactional cache update
-    R-->>B: fresh success or cached warning
+    alt API request succeeds
+      G-->>R: DTO response
+      R->>D: transactional cache update
+      R-->>B: fresh success
+    else API request fails
+      G-->>R: failure
+      R-->>B: cached warning
+    end
   end
   B-->>UI: immutable SearchState
 ```
@@ -113,9 +118,11 @@ again; explicit retry and pull-to-refresh bypass that guard.
 ## Dependency injection
 
 `get_it` assembles the graph in `app/di/service_locator.dart`. It is a composition
-tool, not an ambient service locator. Concrete classes use constructor injection,
-and tests instantiate subjects directly. BLoCs are factories; the database and
-stateless sources, repositories, and use cases are lazy singletons.
+tool, not an ambient service locator. The router resolves the `SearchBloc` factory
+at the route-level `BlocProvider`; presentation widgets never access `get_it`
+directly. Concrete classes use constructor injection, and tests instantiate
+subjects directly. BLoCs are factories; the database and stateless sources,
+repositories, and use cases are lazy singletons.
 
 ## SOLID mapping
 
@@ -131,15 +138,15 @@ stateless sources, repositories, and use cases are lazy singletons.
 
 ## Responsive design
 
-The app has three layout bands:
+The app has two behavioral layout modes. Below 840 logical pixels it uses
+compact navigation and a single search field. At 840 and above, the shell changes
+from bottom navigation to a rail and the search action moves beside the field.
+Shared content-width widgets cap readable content on larger tablets instead of
+introducing another navigation mode.
 
-- compact below 600 logical pixels;
-- medium/tablet behavior from 840 logical pixels;
-- expanded constraints from 1200 logical pixels.
-
-The 600–839 range intentionally remains compact navigation with additional room
-for content. At 840 the shell changes from bottom navigation to a rail. Shared
-content-width widgets prevent duplication between phone and tablet screens.
+Responsive checks sample compact widths below 600, medium/tablet widths from 840,
+and expanded widths from 1200. The latter two intentionally share behavior while
+verifying that maximum-width constraints continue to hold on larger displays.
 
 ## Security and privacy
 

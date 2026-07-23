@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:github_repository_explorer/app/di/service_locator.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/favorites/favorites_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/search/search_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/app_state_panel.dart';
@@ -14,12 +13,7 @@ final class SearchPage extends StatelessWidget {
   const SearchPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<SearchBloc>(),
-      child: const _SearchView(),
-    );
-  }
+  Widget build(BuildContext context) => const _SearchView();
 }
 
 final class _SearchView extends StatefulWidget {

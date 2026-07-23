@@ -175,8 +175,8 @@ Code generation and tests additionally use `build_runner`, `freezed`,
 - Only visited pages are available offline; there is no background prefetch.
 - Repository detail navigation passes an in-memory entity. Process-restored deep
   links would need a `GetRepositoryById` use case backed by Drift/API.
-- Cache cleanup removes old page relationships but intentionally favors simple,
-  safe retention over aggressive orphan-row compaction.
+- Cache cleanup removes expired page relationships and repository rows that are
+  no longer referenced by a current page or favorite.
 - A production release should add telemetry, localization, golden baselines for
   multiple form factors, database migration tests, and secure authenticated API
   support if higher rate limits are required.

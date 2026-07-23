@@ -31,7 +31,7 @@ final class CacheStatusBanner extends StatelessWidget {
         ? 'Showing saved results. ${formatFailureMessage(context, failure)}'
         : isStale
         ? 'Showing saved results from $timestamp while refreshing.'
-        : 'Showing saved results while checking for updates.';
+        : 'Showing saved results from $timestamp.';
     return Semantics(
       liveRegion: true,
       child: Material(

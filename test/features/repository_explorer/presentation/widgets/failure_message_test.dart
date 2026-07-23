@@ -7,7 +7,9 @@ void main() {
   testWidgets('adds the local reset time to a rate-limit failure', (
     tester,
   ) async {
-    final retryAt = DateTime(2026, 7, 23, 14, 30);
+    final retryAt = DateTime.utc(2026, 7, 23, 12, 30);
+    final localRetryAt = DateTime(2026, 7, 23, 14, 30);
+    DateTime? valuePassedToLocalize;
     late String expectedDate;
     late String expectedTime;
     await tester.pumpWidget(
@@ -20,14 +22,18 @@ void main() {
         home: Builder(
           builder: (context) {
             final localizations = MaterialLocalizations.of(context);
-            expectedDate = localizations.formatMediumDate(retryAt);
+            expectedDate = localizations.formatMediumDate(localRetryAt);
             expectedTime = localizations.formatTimeOfDay(
-              TimeOfDay.fromDateTime(retryAt),
+              TimeOfDay.fromDateTime(localRetryAt),
             );
             return Text(
               formatFailureMessage(
                 context,
                 Failure.rateLimited(retryAt: retryAt),
+                localize: (value) {
+                  valuePassedToLocalize = value;
+                  return localRetryAt;
+                },
               ),
             );
           },
@@ -42,6 +48,8 @@ void main() {
       ),
       findsOneWidget,
     );
+    expect(valuePassedToLocalize, retryAt);
+    expect(valuePassedToLocalize?.isUtc, isTrue);
   });
 
   testWidgets('keeps the default message when no reset time is known', (

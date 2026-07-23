@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:github_repository_explorer/core/error/failure.dart';
 
-String formatFailureMessage(BuildContext context, Failure failure) {
+DateTime _toLocal(DateTime value) => value.toLocal();
+
+String formatFailureMessage(
+  BuildContext context,
+  Failure failure, {
+  DateTime Function(DateTime) localize = _toLocal,
+}) {
   final retryAt = switch (failure) {
-    RateLimitedFailure(retryAt: final retryAt?) => retryAt.toLocal(),
+    RateLimitedFailure(retryAt: final retryAt?) => localize(retryAt),
     _ => null,
   };
   if (retryAt == null) return failure.message;

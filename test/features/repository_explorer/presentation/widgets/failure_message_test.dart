@@ -23,7 +23,6 @@ void main() {
             expectedDate = localizations.formatMediumDate(retryAt);
             expectedTime = localizations.formatTimeOfDay(
               TimeOfDay.fromDateTime(retryAt),
-              alwaysUse24HourFormat: false,
             );
             return Text(
               formatFailureMessage(

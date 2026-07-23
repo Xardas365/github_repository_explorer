@@ -29,46 +29,41 @@ The gallery focuses on the primary journey instead of repeating every
 intermediate state: search, repository detail, persistent favorites, and the
 adaptive tablet layout.
 
-<table>
-  <tr>
-    <td colspan="2">
-      <img
-        src="docs/screenshots/search-results-tablet-dark.png"
-        alt="Repository search results in the adaptive dark tablet layout"
-      >
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">
-      <strong>Search results</strong> — adaptive tablet navigation and readable
-      content width.
-    </td>
-  </tr>
-  <tr>
-    <td width="38%">
-      <img
-        src="docs/screenshots/repository-detail-phone-dark.png"
-        alt="Repository detail on a phone in dark mode"
-      >
-    </td>
-    <td width="62%">
-      <img
-        src="docs/screenshots/favorites-tablet-dark.png"
-        alt="Persistent favorites in the adaptive dark tablet layout"
-      >
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <strong>Repository detail</strong> — activity, language, favorite, and
-      GitHub link.
-    </td>
-    <td align="center">
-      <strong>Favorites</strong> — persisted repositories remain available
-      offline.
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img
+    src="docs/screenshots/search-results-tablet-dark.png"
+    alt="Repository search results in the adaptive dark tablet layout"
+    width="900"
+  >
+</p>
+<p align="center">
+  <strong>Search results</strong> — adaptive tablet navigation and readable
+  content width.
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/repository-detail-phone-dark.png"
+    alt="Repository detail on a phone in dark mode"
+    width="360"
+  >
+</p>
+<p align="center">
+  <strong>Repository detail</strong> — activity, language, favorite, and GitHub
+  link.
+</p>
+
+<p align="center">
+  <img
+    src="docs/screenshots/favorites-tablet-dark.png"
+    alt="Persistent favorites in the adaptive dark tablet layout with the remove action tooltip"
+    width="900"
+  >
+</p>
+<p align="center">
+  <strong>Favorites</strong> — persisted repositories remain available offline,
+  while the tooltip explains the removal action.
+</p>
 
 <details>
   <summary>Additional recovery state</summary>

@@ -24,7 +24,7 @@ final class AppStatePanel extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final minHeight = constraints.hasBoundedHeight
-            ? math.max(0.0, constraints.maxHeight - padding.vertical)
+            ? math.max(0, constraints.maxHeight - padding.vertical)
             : 0.0;
         return SingleChildScrollView(
           padding: padding,

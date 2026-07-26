@@ -24,27 +24,11 @@ final class _SearchView extends StatefulWidget {
 
 final class _SearchViewState extends State<_SearchView> {
   final _searchController = TextEditingController();
-  final _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_loadMoreIfNeeded);
-  }
 
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_loadMoreIfNeeded)
-      ..dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _loadMoreIfNeeded() {
-    if (_scrollController.position.extentAfter < 500) {
-      context.read<SearchBloc>().add(const SearchEvent.loadNextPage());
-    }
   }
 
   Future<void> _refresh() async {
@@ -95,8 +79,8 @@ final class _SearchViewState extends State<_SearchView> {
               Expanded(
                 child: BlocBuilder<SearchBloc, SearchState>(
                   builder: (context, state) => _SearchResults(
+                    key: ValueKey(state.query),
                     state: state,
-                    scrollController: _scrollController,
                     onRefresh: _refresh,
                   ),
                 ),
@@ -109,19 +93,46 @@ final class _SearchViewState extends State<_SearchView> {
   }
 }
 
-final class _SearchResults extends StatelessWidget {
+final class _SearchResults extends StatefulWidget {
   const _SearchResults({
     required this.state,
-    required this.scrollController,
     required this.onRefresh,
+    super.key,
   });
 
   final SearchState state;
-  final ScrollController scrollController;
   final Future<void> Function() onRefresh;
 
   @override
+  State<_SearchResults> createState() => _SearchResultsState();
+}
+
+final class _SearchResultsState extends State<_SearchResults> {
+  final _scrollController = ScrollController(keepScrollOffset: false);
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_loadMoreIfNeeded);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_loadMoreIfNeeded)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _loadMoreIfNeeded() {
+    if (_scrollController.position.extentAfter < 500) {
+      context.read<SearchBloc>().add(const SearchEvent.loadNextPage());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
     switch (state.status) {
       case SearchStatus.initial:
         return AppStatePanel(
@@ -173,10 +184,10 @@ final class _SearchResults extends StatelessWidget {
             ],
             Expanded(
               child: RefreshIndicator(
-                onRefresh: onRefresh,
+                onRefresh: widget.onRefresh,
                 child: ListView.separated(
                   key: const PageStorageKey('repository-search-results'),
-                  controller: scrollController,
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 24),
                   itemCount: state.repositories.length + 1,

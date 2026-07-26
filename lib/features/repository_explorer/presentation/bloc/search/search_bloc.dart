@@ -55,7 +55,7 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
     );
     on<SearchSubmitted>(_onSubmitted);
     on<SearchLoadNextPage>(_onLoadNextPage, transformer: droppable());
-    on<SearchRetried>(_onRetried);
+    on<SearchPageRetried>(_onPageRetried);
     on<SearchRefreshed>(_onRefreshed);
   }
 
@@ -93,7 +93,8 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
   ) async {
     if (state.query.isEmpty ||
         state.hasReachedEnd ||
-        state.isLoadingNextPage ||
+        state.loadingPage != null ||
+        state.paginationFailure != null ||
         state.status != SearchStatus.success) {
       return;
     }
@@ -104,19 +105,17 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
     );
   }
 
-  Future<void> _onRetried(
-    SearchRetried event,
+  Future<void> _onPageRetried(
+    SearchPageRetried event,
     Emitter<SearchState> emit,
   ) async {
-    if (state.query.isEmpty) return;
-    final retryPage = state.paginationFailure == null
-        ? (state.currentPage == 0 ? 1 : state.currentPage)
-        : state.currentPage + 1;
+    if (state.query.isEmpty || event.page < 1) return;
     await _search(
       query: state.query,
       emit: emit,
-      page: retryPage,
+      page: event.page,
       forceRefresh: true,
+      preserveItems: state.pages.isNotEmpty,
     );
   }
 
@@ -161,23 +160,27 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
     _activeRequestId = requestId;
     if (page == 1) {
       emit(
-        state.copyWith(
-          status: preserveItems ? state.status : SearchStatus.loading,
-          query: normalized,
-          repositories: preserveItems ? state.repositories : const [],
-          currentPage: preserveItems ? state.currentPage : 0,
-          isRefreshing: preserveItems,
-          isLoadingNextPage: false,
-          failure: null,
-          refreshFailure: null,
-          paginationFailure: null,
-        ),
+        preserveItems
+            ? state.copyWith(
+                query: normalized,
+                loadingPage: page,
+                isRefreshing: true,
+                failure: null,
+              )
+            : SearchState(
+                status: SearchStatus.loading,
+                query: normalized,
+                loadingPage: page,
+              ),
       );
     } else {
+      final retainedPageFailure = state.pageFailure?.page == page
+          ? null
+          : state.pageFailure;
       emit(
         state.copyWith(
-          isLoadingNextPage: true,
-          paginationFailure: null,
+          loadingPage: page,
+          pageFailure: retainedPageFailure,
         ),
       );
     }
@@ -192,47 +195,61 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
         if (requestId != _requestId || emit.isDone) return;
         switch (result) {
           case Success<RepositoryPage>(:final data):
-            final repositories = page == 1
-                ? data.repositories
-                : _mergeById(state.repositories, data.repositories);
+            final pages = Map<int, RepositoryPage>.of(state.pages);
+            if (data.origin == DataOrigin.network) {
+              pages.removeWhere((pageNumber, _) => pageNumber > data.page);
+            }
+            pages[data.page] = data;
+            final repositories = _flattenPages(pages);
+            final continuesRevalidation =
+                data.origin == DataOrigin.cache &&
+                data.isStale &&
+                data.refreshFailure == null;
             emit(
               state.copyWith(
                 status: repositories.isEmpty
                     ? SearchStatus.empty
                     : SearchStatus.success,
                 query: normalized,
-                repositories: repositories,
-                currentPage: data.page,
-                hasReachedEnd: !data.hasNextPage,
-                isLoadingNextPage: false,
-                isRefreshing: false,
-                isFromCache: data.origin == DataOrigin.cache,
-                isStale: data.isStale,
-                fetchedAt: data.fetchedAt,
+                pages: pages,
+                loadingPage: continuesRevalidation ? page : null,
+                isRefreshing:
+                    page == 1 && continuesRevalidation && preserveItems,
                 failure: null,
-                refreshFailure: data.refreshFailure,
-                paginationFailure: null,
+                pageFailure: state.pageFailure?.page == page
+                    ? null
+                    : state.pageFailure,
               ),
             );
           case FailureResult<RepositoryPage>(:final failure):
             if (page > 1) {
               emit(
                 state.copyWith(
-                  isLoadingNextPage: false,
-                  paginationFailure: failure,
+                  loadingPage: null,
+                  pageFailure: SearchPageFailure(
+                    page: page,
+                    failure: failure,
+                  ),
                 ),
               );
             } else if (preserveItems && state.repositories.isNotEmpty) {
+              final pages = Map<int, RepositoryPage>.of(state.pages);
+              final firstPage = pages[1];
+              if (firstPage != null) {
+                pages[1] = firstPage.copyWith(refreshFailure: failure);
+              }
               emit(
                 state.copyWith(
+                  pages: pages,
+                  loadingPage: null,
                   isRefreshing: false,
-                  refreshFailure: failure,
                 ),
               );
             } else {
               emit(
                 state.copyWith(
                   status: SearchStatus.failure,
+                  loadingPage: null,
                   isRefreshing: false,
                   failure: failure,
                 ),
@@ -249,14 +266,14 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
     }
   }
 
-  List<GithubRepository> _mergeById(
-    List<GithubRepository> existing,
-    List<GithubRepository> incoming,
-  ) {
-    final byId = <int, GithubRepository>{
-      for (final repository in existing) repository.id: repository,
-      for (final repository in incoming) repository.id: repository,
-    };
-    return byId.values.toList(growable: false);
+  List<GithubRepository> _flattenPages(Map<int, RepositoryPage> pages) {
+    final repositoriesById = <int, GithubRepository>{};
+    final pageNumbers = pages.keys.toList()..sort();
+    for (final pageNumber in pageNumbers) {
+      for (final repository in pages[pageNumber]!.repositories) {
+        repositoriesById.putIfAbsent(repository.id, () => repository);
+      }
+    }
+    return repositoriesById.values.toList(growable: false);
   }
 }

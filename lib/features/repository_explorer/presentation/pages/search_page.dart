@@ -170,7 +170,7 @@ final class _SearchResults extends StatelessWidget {
               : formatFailureMessage(context, failure),
           actionLabel: 'Try again',
           onAction: () =>
-              context.read<SearchBloc>().add(const SearchEvent.retried()),
+              context.read<SearchBloc>().add(const SearchEvent.retryPage(1)),
         );
       case SearchStatus.success:
         return Column(
@@ -181,7 +181,7 @@ final class _SearchResults extends StatelessWidget {
                 fetchedAt: state.fetchedAt,
                 refreshFailure: state.refreshFailure,
                 onRetry: () => context.read<SearchBloc>().add(
-                  const SearchEvent.refreshed(),
+                  const SearchEvent.retryPage(1),
                 ),
               ),
               const SizedBox(height: 12),
@@ -228,10 +228,14 @@ final class _PaginationFooter extends StatelessWidget {
       );
     }
     if (state.paginationFailure case final failure?) {
+      final failedPage = state.paginationFailurePage;
       return Center(
         child: TextButton.icon(
-          onPressed: () =>
-              context.read<SearchBloc>().add(const SearchEvent.retried()),
+          onPressed: failedPage == null
+              ? null
+              : () => context.read<SearchBloc>().add(
+                  SearchEvent.retryPage(failedPage),
+                ),
           icon: const Icon(Icons.refresh),
           label: Text('${formatFailureMessage(context, failure)} Retry'),
         ),

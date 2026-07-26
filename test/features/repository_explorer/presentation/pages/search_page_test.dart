@@ -86,13 +86,11 @@ void main() {
       ),
     );
 
-    final firstSearch = searchBloc.stream.firstWhere(
-      (state) =>
-          state.query == 'flutter' && state.status == SearchStatus.success,
-    );
     searchBloc.add(const SearchEvent.submitted('flutter'));
-    await firstSearch;
     await tester.pump();
+    await tester.pump();
+    expect(searchBloc.state.query, 'flutter');
+    expect(searchBloc.state.status, SearchStatus.success);
 
     final firstList = tester.widget<ListView>(find.byType(ListView));
     final firstController = firstList.controller!;
@@ -100,13 +98,11 @@ void main() {
     await tester.pump();
     expect(firstController.offset, greaterThan(0));
 
-    final secondSearch = searchBloc.stream.firstWhere(
-      (state) =>
-          state.query == 'dart sdk' && state.status == SearchStatus.success,
-    );
     searchBloc.add(const SearchEvent.submitted('  dart   sdk  '));
-    await secondSearch;
     await tester.pump();
+    await tester.pump();
+    expect(searchBloc.state.query, 'dart sdk');
+    expect(searchBloc.state.status, SearchStatus.success);
 
     final secondController = tester
         .widget<ListView>(find.byType(ListView))

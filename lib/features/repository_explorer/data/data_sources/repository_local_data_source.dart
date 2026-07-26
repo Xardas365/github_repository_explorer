@@ -16,10 +16,11 @@ abstract interface class RepositoryLocalDataSource {
 
   Stream<List<CachedRepositoryModel>> watchFavorites();
 
-  Future<void> setFavorite(
-    CachedRepositoryModel repository, {
+  Future<void> setFavorite({
+    required int repositoryId,
     required bool isFavorite,
     required DateTime changedAt,
+    CachedRepositoryModel? repositoryIfMissing,
   });
 
   Future<void> prune({required DateTime olderThan});
@@ -148,29 +149,36 @@ final class DriftRepositoryLocalDataSource
   }
 
   @override
-  Future<void> setFavorite(
-    CachedRepositoryModel repository, {
+  Future<void> setFavorite({
+    required int repositoryId,
     required bool isFavorite,
     required DateTime changedAt,
+    CachedRepositoryModel? repositoryIfMissing,
   }) async {
     try {
       await _database.transaction(() async {
-        await _database
-            .into(_database.cachedRepositories)
-            .insertOnConflictUpdate(_toCompanion(repository));
         if (isFavorite) {
+          final fallback = repositoryIfMissing;
+          if (fallback != null) {
+            await _database
+                .into(_database.cachedRepositories)
+                .insert(
+                  _toCompanion(fallback),
+                  mode: InsertMode.insertOrIgnore,
+                );
+          }
           await _database
               .into(_database.favoriteRepositories)
               .insertOnConflictUpdate(
                 FavoriteRepositoriesCompanion.insert(
-                  repositoryId: Value(repository.id),
+                  repositoryId: Value(repositoryId),
                   favoritedAt: changedAt.toUtc(),
                 ),
               );
         } else {
           await (_database.delete(
             _database.favoriteRepositories,
-          )..where((row) => row.repositoryId.equals(repository.id))).go();
+          )..where((row) => row.repositoryId.equals(repositoryId))).go();
         }
       });
     } on Object catch (error) {

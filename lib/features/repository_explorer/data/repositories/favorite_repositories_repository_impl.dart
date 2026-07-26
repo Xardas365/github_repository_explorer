@@ -40,7 +40,8 @@ final class FavoriteRepositoriesRepositoryImpl
     try {
       final now = _clock.now();
       await _local.setFavorite(
-        repository.toCache(now),
+        repositoryId: repository.id,
+        repositoryIfMissing: isFavorite ? repository.toCache(now) : null,
         isFavorite: isFavorite,
         changedAt: now,
       );

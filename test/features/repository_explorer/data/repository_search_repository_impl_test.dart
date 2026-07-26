@@ -295,10 +295,11 @@ final class _FakeLocalDataSource implements RepositoryLocalDataSource {
   Future<void> prune({required DateTime olderThan}) async {}
 
   @override
-  Future<void> setFavorite(
-    CachedRepositoryModel repository, {
+  Future<void> setFavorite({
+    required int repositoryId,
     required bool isFavorite,
     required DateTime changedAt,
+    CachedRepositoryModel? repositoryIfMissing,
   }) async {}
 
   @override

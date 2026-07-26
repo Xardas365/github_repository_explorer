@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -64,6 +65,39 @@ void main() {
 
       expect(page.hasNextPage, isFalse);
     });
+  });
+
+  test('forwards cancellation to the active Dio request', () async {
+    final adapter = _CancellableAdapter();
+    final dio = Dio(BaseOptions(baseUrl: 'https://api.github.test'))
+      ..httpClientAdapter = adapter;
+    final cancelToken = CancelToken();
+    final search =
+        DioGithubRemoteDataSource(
+          dio,
+          clock: _FakeClock(DateTime.utc(2026, 7, 23, 12)),
+        ).search(
+          query: 'flutter',
+          page: 1,
+          pageSize: 30,
+          cancelToken: cancelToken,
+        );
+    await adapter.started.future;
+
+    cancelToken.cancel('Superseded');
+
+    await expectLater(
+      search,
+      throwsA(
+        isA<DioException>().having(
+          CancelToken.isCancel,
+          'is cancellation',
+          isTrue,
+        ),
+      ),
+    );
+    expect(adapter.cancelled, isTrue);
+    dio.close(force: true);
   });
 
   group('DioGithubRemoteDataSource rate limits', () {
@@ -205,7 +239,12 @@ Future<RemoteRepositoryPage> _search({
     return await DioGithubRemoteDataSource(
       dio,
       clock: _FakeClock(DateTime.utc(2026, 7, 23, 12)),
-    ).search(query: 'flutter', page: page, pageSize: 30);
+    ).search(
+      query: 'flutter',
+      page: page,
+      pageSize: 30,
+      cancelToken: CancelToken(),
+    );
   } finally {
     dio.close(force: true);
   }
@@ -227,7 +266,12 @@ Future<AppException> _searchError({
     await DioGithubRemoteDataSource(
       dio,
       clock: _FakeClock(now),
-    ).search(query: 'flutter', page: 1, pageSize: 30);
+    ).search(
+      query: 'flutter',
+      page: 1,
+      pageSize: 30,
+      cancelToken: CancelToken(),
+    );
     fail('Expected the search to throw an AppException.');
   } on AppException catch (error) {
     return error;
@@ -272,6 +316,30 @@ final class _JsonResponseAdapter implements HttpClientAdapter {
       ...headers,
     },
   );
+
+  @override
+  void close({bool force = false}) {}
+}
+
+final class _CancellableAdapter implements HttpClientAdapter {
+  final started = Completer<void>();
+  bool cancelled = false;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    started.complete();
+    await cancelFuture;
+    cancelled = true;
+    throw DioException(
+      requestOptions: options,
+      type: DioExceptionType.cancel,
+      error: 'Superseded',
+    );
+  }
 
   @override
   void close({bool force = false}) {}

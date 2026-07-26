@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
 import 'package:github_repository_explorer/core/error/failure.dart';
 import 'package:github_repository_explorer/core/error/failure_mapper.dart';
@@ -33,77 +36,127 @@ final class RepositorySearchRepositoryImpl
   @override
   Stream<Result<RepositoryPage>> search(
     RepositorySearchRequest request,
-  ) async* {
-    CachedRepositoryPage? cached;
-    try {
-      cached = await _local.readPage(query: request.query, page: request.page);
-      if (cached != null && !request.forceRefresh) {
-        final cachedPage = _cachedPageToDomain(cached);
-        yield Result.success(cachedPage);
-        if (!cachedPage.isStale) return;
-      }
-    } on Object {
-      cached = null;
-    }
+  ) {
+    final cancelToken = CancelToken();
+    late final StreamController<Result<RepositoryPage>> controller;
+    controller = StreamController<Result<RepositoryPage>>(
+      onListen: () {
+        unawaited(_runSearch(request, cancelToken, controller));
+      },
+      onCancel: () {
+        if (!cancelToken.isCancelled) {
+          cancelToken.cancel('Search superseded.');
+        }
+      },
+    );
+    return controller.stream;
+  }
 
-    final blockedUntil = request.forceRefresh ? null : _activeRateLimit();
-    if (blockedUntil != null) {
-      final failure = Failure.rateLimited(retryAt: blockedUntil);
-      if (cached != null) {
-        yield Result.success(
-          _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
-        );
-      } else {
-        yield Result.failure(failure);
-      }
-      return;
-    }
-
+  Future<void> _runSearch(
+    RepositorySearchRequest request,
+    CancelToken cancelToken,
+    StreamController<Result<RepositoryPage>> controller,
+  ) async {
     try {
-      final response = await _remote.search(
-        query: request.query,
-        page: request.page,
-        pageSize: _repositorySearchPageSize,
-      );
-      final now = _clock.now();
-      final repositories = response.repositories
-          .map((dto) => dto.toDomain())
-          .toList(growable: false);
-      final cachePage = CachedRepositoryPage(
-        repositories: repositories
-            .map((repository) => repository.toCache(now))
-            .toList(growable: false),
-        page: request.page,
-        hasNextPage: response.hasNextPage,
-        fetchedAt: now,
-      );
+      CachedRepositoryPage? cached;
       try {
-        await _local.writePage(query: request.query, page: cachePage);
-        await _local.prune(olderThan: now.subtract(_cachePolicy.retainFor));
+        cached = await _local.readPage(
+          query: request.query,
+          page: request.page,
+        );
+        if (!_isActive(cancelToken, controller)) return;
+        if (cached != null && !request.forceRefresh) {
+          final cachedPage = _cachedPageToDomain(cached);
+          controller.add(Result.success(cachedPage));
+          if (!cachedPage.isStale) return;
+        }
       } on Object {
-        // A cache write must not hide a valid network response.
+        cached = null;
       }
-      yield Result.success(
-        RepositoryPage(
-          repositories: repositories,
+
+      final blockedUntil = request.forceRefresh ? null : _activeRateLimit();
+      if (blockedUntil != null) {
+        final failure = Failure.rateLimited(retryAt: blockedUntil);
+        if (cached != null) {
+          controller.add(
+            Result.success(
+              _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
+            ),
+          );
+        } else {
+          controller.add(Result.failure(failure));
+        }
+        return;
+      }
+
+      try {
+        final response = await _remote.search(
+          query: request.query,
+          page: request.page,
+          pageSize: _repositorySearchPageSize,
+          cancelToken: cancelToken,
+        );
+        if (!_isActive(cancelToken, controller)) return;
+        final now = _clock.now();
+        final repositories = response.repositories
+            .map((dto) => dto.toDomain())
+            .toList(growable: false);
+        final cachePage = CachedRepositoryPage(
+          repositories: repositories
+              .map((repository) => repository.toCache(now))
+              .toList(growable: false),
           page: request.page,
           hasNextPage: response.hasNextPage,
-          origin: DataOrigin.network,
           fetchedAt: now,
-        ),
-      );
-    } on Object catch (error) {
-      final failure = mapExceptionToFailure(error);
-      _rememberRateLimit(failure);
-      if (cached != null) {
-        yield Result.success(
-          _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
         );
-      } else {
-        yield Result.failure(failure);
+        try {
+          await _local.writePage(query: request.query, page: cachePage);
+          if (!_isActive(cancelToken, controller)) return;
+          await _local.prune(olderThan: now.subtract(_cachePolicy.retainFor));
+        } on Object {
+          // A cache write must not hide a valid network response.
+        }
+        if (!_isActive(cancelToken, controller)) return;
+        controller.add(
+          Result.success(
+            RepositoryPage(
+              repositories: repositories,
+              page: request.page,
+              hasNextPage: response.hasNextPage,
+              origin: DataOrigin.network,
+              fetchedAt: now,
+            ),
+          ),
+        );
+      } on Object catch (error) {
+        if (error is DioException && CancelToken.isCancel(error)) return;
+        if (!_isActive(cancelToken, controller)) return;
+        final failure = mapExceptionToFailure(error);
+        _rememberRateLimit(failure);
+        if (cached != null) {
+          controller.add(
+            Result.success(
+              _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
+            ),
+          );
+        } else {
+          controller.add(Result.failure(failure));
+        }
+      }
+    } finally {
+      if (!controller.isClosed) {
+        unawaited(controller.close());
       }
     }
   }
+
+  bool _isActive(
+    CancelToken cancelToken,
+    StreamController<Result<RepositoryPage>> controller,
+  ) =>
+      !cancelToken.isCancelled &&
+      !controller.isClosed &&
+      controller.hasListener;
 
   DateTime? _activeRateLimit() {
     final retryAt = _rateLimitedUntil;

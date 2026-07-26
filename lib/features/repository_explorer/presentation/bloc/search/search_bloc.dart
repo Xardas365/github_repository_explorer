@@ -66,6 +66,7 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
   String? _activeQuery;
   int? _activePage;
   int? _activeRequestId;
+  StreamIterator<Result<RepositoryPage>>? _activeSearch;
 
   @override
   void onEvent(SearchEvent event) {
@@ -155,6 +156,11 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
     }
 
     final requestId = ++_requestId;
+    final previousSearch = _activeSearch;
+    if (previousSearch != null) {
+      await previousSearch.cancel();
+    }
+    if (requestId != _requestId || emit.isDone) return;
     _activeQuery = normalized;
     _activePage = page;
     _activeRequestId = requestId;
@@ -190,8 +196,13 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
       page: page,
       forceRefresh: forceRefresh,
     );
+    final search = StreamIterator<Result<RepositoryPage>>(
+      _searchRepositories(request),
+    );
+    _activeSearch = search;
     try {
-      await for (final result in _searchRepositories(request)) {
+      while (await search.moveNext()) {
+        final result = search.current;
         if (requestId != _requestId || emit.isDone) return;
         switch (result) {
           case Success<RepositoryPage>(:final data):
@@ -258,12 +269,24 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
         }
       }
     } finally {
+      await search.cancel();
+      if (identical(_activeSearch, search)) {
+        _activeSearch = null;
+      }
       if (_activeRequestId == requestId) {
         _activeQuery = null;
         _activePage = null;
         _activeRequestId = null;
       }
     }
+  }
+
+  @override
+  Future<void> close() async {
+    _requestId++;
+    await _activeSearch?.cancel();
+    _activeSearch = null;
+    return super.close();
   }
 
   List<GithubRepository> _flattenPages(Map<int, RepositoryPage> pages) {

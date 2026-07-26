@@ -33,6 +33,7 @@ abstract interface class GithubRemoteDataSource {
     required String query,
     required int page,
     required int pageSize,
+    required CancelToken cancelToken,
   });
 }
 
@@ -48,6 +49,7 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
     required String query,
     required int page,
     required int pageSize,
+    required CancelToken cancelToken,
   }) async {
     try {
       final response = await _dio.get<Map<String, Object?>>(
@@ -57,6 +59,7 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
           'page': page,
           'per_page': pageSize,
         },
+        cancelToken: cancelToken,
       );
       final json = response.data;
       if (json == null) {
@@ -76,6 +79,7 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
         hasNextPage: hasNextPage,
       );
     } on DioException catch (error) {
+      if (CancelToken.isCancel(error)) rethrow;
       throw _mapDioException(error);
     } on AppException {
       rethrow;

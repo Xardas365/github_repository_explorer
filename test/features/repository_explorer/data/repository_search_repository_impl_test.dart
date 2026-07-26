@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
 import 'package:github_repository_explorer/core/error/app_exception.dart';
 import 'package:github_repository_explorer/core/error/failure.dart';
@@ -246,6 +249,27 @@ void main() {
     );
     expect(remote.calls, 2);
   });
+
+  test('cancelling the result stream cancels the remote request', () async {
+    final started = Completer<void>();
+    remote.handler = (_, _, _) async {
+      started.complete();
+      final cancellation = await remote.lastCancelToken!.whenCancel;
+      throw cancellation;
+    };
+    final results = <Result<RepositoryPage>>[];
+    final subscription = repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .listen(results.add);
+    await started.future;
+
+    await subscription.cancel();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(remote.lastCancelToken?.isCancelled, isTrue);
+    expect(local.writeCalls, 0);
+    expect(results, isEmpty);
+  });
 }
 
 final class _FakeClock implements Clock {
@@ -262,20 +286,24 @@ final class _FakeRemoteDataSource implements GithubRemoteDataSource {
 
   Future<RemoteRepositoryPage> Function(String, int, int) handler;
   int calls = 0;
+  CancelToken? lastCancelToken;
 
   @override
   Future<RemoteRepositoryPage> search({
     required String query,
     required int page,
     required int pageSize,
+    required CancelToken cancelToken,
   }) {
     calls++;
+    lastCancelToken = cancelToken;
     return handler(query, page, pageSize);
   }
 }
 
 final class _FakeLocalDataSource implements RepositoryLocalDataSource {
   final Map<String, CachedRepositoryPage> pages = {};
+  int writeCalls = 0;
 
   @override
   Future<CachedRepositoryPage?> readPage({
@@ -288,6 +316,7 @@ final class _FakeLocalDataSource implements RepositoryLocalDataSource {
     required String query,
     required CachedRepositoryPage page,
   }) async {
+    writeCalls++;
     pages['$query:${page.page}'] = page;
   }
 

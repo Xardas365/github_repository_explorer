@@ -657,6 +657,41 @@ void main() {
     await dartResults.close();
     await bloc.close();
   });
+
+  test('a different query cancels the active repository stream', () async {
+    final firstCancelled = Completer<void>();
+    final firstCalled = Completer<void>();
+    final firstResults = StreamController<Result<RepositoryPage>>(
+      onCancel: () {
+        firstCancelled.complete();
+      },
+    );
+    when(() => repository.search(any())).thenAnswer((invocation) {
+      final request =
+          invocation.positionalArguments.single as RepositorySearchRequest;
+      if (request.query == 'flutter') {
+        firstCalled.complete();
+        return firstResults.stream;
+      }
+      return Stream.value(
+        Result.success(
+          _page(sampleRepository.copyWith(id: 43, name: 'dart')),
+        ),
+      );
+    });
+    final bloc = buildBloc()..add(const SearchEvent.submitted('flutter'));
+    await firstCalled.future;
+
+    bloc.add(const SearchEvent.submitted('dart'));
+    await firstCancelled.future;
+    await bloc.stream.firstWhere(
+      (state) => state.status == SearchStatus.success && state.query == 'dart',
+    );
+
+    expect(bloc.state.repositories.single.name, 'dart');
+    await firstResults.close();
+    await bloc.close();
+  });
 }
 
 RepositoryPage _page(GithubRepository repository) => RepositoryPage(

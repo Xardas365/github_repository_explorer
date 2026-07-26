@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/favorites/favorites_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/search/search_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/app_state_panel.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/cache_status_banner.dart';
@@ -53,70 +52,56 @@ final class _SearchViewState extends State<_SearchView> {
     await bloc.stream.firstWhere((state) => !state.isRefreshing);
   }
 
-  void _showFavoriteError(FavoritesState state) {
-    final failure = state.operationFailure;
-    if (failure == null) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(failure.message)));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: BlocListener<FavoritesBloc, FavoritesState>(
-          listenWhen: (previous, current) =>
-              previous.operationFailure != current.operationFailure &&
-              current.operationFailure != null,
-          listener: (context, state) => _showFavoriteError(state),
-          child: ContentWidth(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 24),
-                Text(
-                  'Explore GitHub',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 24),
+              Text(
+                'Explore GitHub',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Find public repositories, inspect the details, and keep '
+                'favorites available offline.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SearchInput(
+                controller: _searchController,
+                onChanged: (query) => context.read<SearchBloc>().add(
+                  SearchEvent.queryChanged(query),
+                ),
+                onSubmitted: (query) => context.read<SearchBloc>().add(
+                  SearchEvent.submitted(query),
+                ),
+                onCleared: () {
+                  _searchController.clear();
+                  context.read<SearchBloc>().add(
+                    const SearchEvent.queryChanged(''),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: BlocBuilder<SearchBloc, SearchState>(
+                  builder: (context, state) => _SearchResults(
+                    state: state,
+                    scrollController: _scrollController,
+                    onRefresh: _refresh,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Find public repositories, inspect the details, and keep '
-                  'favorites available offline.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SearchInput(
-                  controller: _searchController,
-                  onChanged: (query) => context.read<SearchBloc>().add(
-                    SearchEvent.queryChanged(query),
-                  ),
-                  onSubmitted: (query) => context.read<SearchBloc>().add(
-                    SearchEvent.submitted(query),
-                  ),
-                  onCleared: () {
-                    _searchController.clear();
-                    context.read<SearchBloc>().add(
-                      const SearchEvent.queryChanged(''),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: BlocBuilder<SearchBloc, SearchState>(
-                    builder: (context, state) => _SearchResults(
-                      state: state,
-                      scrollController: _scrollController,
-                      onRefresh: _refresh,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

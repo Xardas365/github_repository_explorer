@@ -12,44 +12,31 @@ final class FavoritesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: BlocListener<FavoritesBloc, FavoritesState>(
-          listenWhen: (previous, current) =>
-              previous.operationFailure != current.operationFailure &&
-              current.operationFailure != null,
-          listener: (context, state) {
-            final failure = state.operationFailure;
-            if (failure == null) return;
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text(failure.message)));
-          },
-          child: ContentWidth(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 24),
-                Text(
-                  'Favorites',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 24),
+              Text(
+                'Favorites',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Saved repositories remain available after restarting the app.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Saved repositories remain available after restarting the app.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: BlocBuilder<FavoritesBloc, FavoritesState>(
-                    builder: (context, state) =>
-                        _FavoritesContent(state: state),
-                  ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: BlocBuilder<FavoritesBloc, FavoritesState>(
+                  builder: (context, state) => _FavoritesContent(state: state),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

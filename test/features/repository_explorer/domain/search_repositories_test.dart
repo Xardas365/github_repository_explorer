@@ -53,7 +53,8 @@ void main() {
       result,
       const Result<RepositoryPage>.failure(
         Failure.validation(
-          message: 'Enter at least two characters to search.',
+          code: ValidationFailureCode.inputTooShort,
+          minimumLength: 2,
         ),
       ),
     );

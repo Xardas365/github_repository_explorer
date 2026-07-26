@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:github_repository_explorer/core/error/app_exception.dart';
+import 'package:github_repository_explorer/core/logging/app_logger.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/database/app_database.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/database/cached_repository_model.dart';
 
@@ -28,9 +29,13 @@ abstract interface class RepositoryLocalDataSource {
 
 final class DriftRepositoryLocalDataSource
     implements RepositoryLocalDataSource {
-  const DriftRepositoryLocalDataSource(this._database);
+  const DriftRepositoryLocalDataSource(
+    this._database, {
+    required AppLogger logger,
+  }) : _logger = logger;
 
   final AppDatabase _database;
+  final AppLogger _logger;
 
   @override
   Future<CachedRepositoryPage?> readPage({
@@ -72,8 +77,13 @@ final class DriftRepositoryLocalDataSource
         hasNextPage: metadata.hasNextPage,
         fetchedAt: metadata.fetchedAt,
       );
-    } on Object catch (error) {
-      throw CacheException('Could not read cached repositories: $error');
+    } on Exception catch (error, stackTrace) {
+      _logger.error(
+        'Could not read cached repositories.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      throw const CacheException();
     }
   }
 
@@ -119,33 +129,47 @@ final class DriftRepositoryLocalDataSource
           );
         });
       });
-    } on Object catch (error) {
-      throw CacheException('Could not cache repositories: $error');
+    } on Exception catch (error, stackTrace) {
+      _logger.error(
+        'Could not cache repositories.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      throw const CacheException();
     }
   }
 
   @override
-  Stream<List<CachedRepositoryModel>> watchFavorites() {
-    final query =
-        _database.select(_database.favoriteRepositories).join([
-          innerJoin(
-            _database.cachedRepositories,
-            _database.cachedRepositories.id.equalsExp(
-              _database.favoriteRepositories.repositoryId,
+  Stream<List<CachedRepositoryModel>> watchFavorites() async* {
+    try {
+      final query =
+          _database.select(_database.favoriteRepositories).join([
+            innerJoin(
+              _database.cachedRepositories,
+              _database.cachedRepositories.id.equalsExp(
+                _database.favoriteRepositories.repositoryId,
+              ),
             ),
-          ),
-        ])..orderBy([
-          OrderingTerm.desc(_database.favoriteRepositories.favoritedAt),
-        ]);
-    return query.watch().map(
-      (rows) => rows
-          .map(
-            (row) => _toModel(
-              row.readTable(_database.cachedRepositories),
-            ),
-          )
-          .toList(growable: false),
-    );
+          ])..orderBy([
+            OrderingTerm.desc(_database.favoriteRepositories.favoritedAt),
+          ]);
+      await for (final rows in query.watch()) {
+        yield rows
+            .map(
+              (row) => _toModel(
+                row.readTable(_database.cachedRepositories),
+              ),
+            )
+            .toList(growable: false);
+      }
+    } on Exception catch (error, stackTrace) {
+      _logger.error(
+        'Could not watch favorite repositories.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      throw const CacheException();
+    }
   }
 
   @override
@@ -181,8 +205,13 @@ final class DriftRepositoryLocalDataSource
           )..where((row) => row.repositoryId.equals(repositoryId))).go();
         }
       });
-    } on Object catch (error) {
-      throw CacheException('Could not update favorite: $error');
+    } on Exception catch (error, stackTrace) {
+      _logger.error(
+        'Could not update favorite.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      throw const CacheException();
     }
   }
 
@@ -231,8 +260,13 @@ final class DriftRepositoryLocalDataSource
             ))
             .go();
       });
-    } on Object catch (error) {
-      throw CacheException('Could not prune cache: $error');
+    } on Exception catch (error, stackTrace) {
+      _logger.error(
+        'Could not prune repository cache.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      throw const CacheException();
     }
   }
 

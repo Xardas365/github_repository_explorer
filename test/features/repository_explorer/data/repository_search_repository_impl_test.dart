@@ -14,21 +14,26 @@ import 'package:github_repository_explorer/features/repository_explorer/domain/e
 import 'package:github_repository_explorer/features/repository_explorer/domain/entities/repository_search_request.dart';
 import 'package:test/test.dart';
 
+import '../../../helpers/test_logger.dart';
+
 void main() {
   late _FakeClock clock;
   late _FakeLocalDataSource local;
   late _FakeRemoteDataSource remote;
   late RepositorySearchRepositoryImpl repository;
+  late RecordingAppLogger logger;
 
   setUp(() {
     clock = _FakeClock(DateTime.utc(2026, 7, 23, 12));
     local = _FakeLocalDataSource();
     remote = _FakeRemoteDataSource((_, _, _) async => _remotePage);
+    logger = RecordingAppLogger();
     repository = RepositorySearchRepositoryImpl(
       remote: remote,
       local: local,
       cachePolicy: const CachePolicy(),
       clock: clock,
+      logger: logger,
     );
   });
 
@@ -269,6 +274,26 @@ void main() {
     expect(remote.lastCancelToken?.isCancelled, isTrue);
     expect(local.writeCalls, 0);
     expect(results, isEmpty);
+  });
+
+  test('logs an unexpected exception and returns a safe failure', () async {
+    remote.handler = (_, _, _) async {
+      throw Exception('database-password-should-not-reach-ui');
+    };
+
+    final result = await repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .single;
+
+    expect(
+      result,
+      const Result<RepositoryPage>.failure(Failure.unexpected()),
+    );
+    expect(logger.errors, hasLength(1));
+    expect(
+      logger.errors.single.error.toString(),
+      contains('database-password-should-not-reach-ui'),
+    );
   });
 }
 

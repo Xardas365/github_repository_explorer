@@ -1,27 +1,41 @@
-sealed class AppException implements Exception {
-  const AppException(this.message, {this.retryAt});
+import 'package:github_repository_explorer/core/error/failure.dart';
 
-  final String message;
-  final DateTime? retryAt;
+sealed class AppException implements Exception {
+  const AppException();
 }
 
 final class NetworkException extends AppException {
-  const NetworkException([super.message = 'Network request failed.']);
+  const NetworkException();
 }
 
 final class RateLimitException extends AppException {
-  const RateLimitException({super.retryAt})
-    : super('GitHub request limit reached.');
+  const RateLimitException({this.retryAt});
+
+  final DateTime? retryAt;
 }
 
 final class ServerException extends AppException {
-  const ServerException([super.message = 'Remote server request failed.']);
+  const ServerException();
+}
+
+final class RequestRejectedException extends AppException {
+  const RequestRejectedException();
 }
 
 final class CacheException extends AppException {
-  const CacheException([super.message = 'Local cache operation failed.']);
+  const CacheException();
 }
 
 final class ParsingException extends AppException {
-  const ParsingException([super.message = 'Response data was invalid.']);
+  const ParsingException();
+}
+
+final class ValidationException extends AppException {
+  const ValidationException({
+    required this.code,
+    this.minimumLength,
+  });
+
+  final ValidationFailureCode code;
+  final int? minimumLength;
 }

@@ -4,6 +4,7 @@ import 'package:github_repository_explorer/app/di/service_locator.dart';
 import 'package:github_repository_explorer/app/router/app_router.dart';
 import 'package:github_repository_explorer/app/theme/app_theme.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/favorites/favorites_bloc.dart';
+import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/failure_message.dart';
 
 final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -52,7 +53,13 @@ final class FavoriteOperationFailureListener extends StatelessWidget {
         if (failure == null || messenger == null) return;
         messenger
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(failure.message)));
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                formatFailureMessage(messenger.context, failure),
+              ),
+            ),
+          );
       },
       child: child,
     );

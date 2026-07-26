@@ -5,8 +5,11 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
 import 'package:github_repository_explorer/core/error/app_exception.dart';
+import 'package:github_repository_explorer/core/error/failure.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/data_sources/github_remote_data_source.dart';
 import 'package:test/test.dart';
+
+import '../../../helpers/test_logger.dart';
 
 void main() {
   group('DioGithubRemoteDataSource pagination', () {
@@ -76,6 +79,7 @@ void main() {
         DioGithubRemoteDataSource(
           dio,
           clock: _FakeClock(DateTime.utc(2026, 7, 23, 12)),
+          logger: RecordingAppLogger(),
         ).search(
           query: 'flutter',
           page: 1,
@@ -98,6 +102,47 @@ void main() {
     );
     expect(adapter.cancelled, isTrue);
     dio.close(force: true);
+  });
+
+  group('DioGithubRemoteDataSource failures', () {
+    final now = DateTime.utc(2026, 7, 23, 12);
+
+    test('classifies an invalid GitHub search as validation', () async {
+      final exception = await _searchError(now: now, statusCode: 422);
+
+      expect(
+        exception,
+        isA<ValidationException>().having(
+          (error) => error.code,
+          'code',
+          ValidationFailureCode.invalidInput,
+        ),
+      );
+    });
+
+    test('classifies another client response as request rejected', () async {
+      final exception = await _searchError(now: now, statusCode: 404);
+
+      expect(exception, isA<RequestRejectedException>());
+    });
+
+    test('logs malformed response details but exposes a typed error', () async {
+      final logger = RecordingAppLogger();
+      final exception = await _searchError(
+        now: now,
+        statusCode: 200,
+        body: const <String, Object?>{
+          'total_count': 1,
+          'incomplete_results': false,
+          'items': 'not-a-list',
+        },
+        logger: logger,
+      );
+
+      expect(exception, isA<ParsingException>());
+      expect(logger.errors, hasLength(1));
+      expect(logger.errors.single.error, isA<TypeError>());
+    });
   });
 
   group('DioGithubRemoteDataSource rate limits', () {
@@ -204,7 +249,7 @@ void main() {
           body: const <String, Object?>{'message': 'Resource not accessible'},
         );
 
-        expect(exception, isA<ServerException>());
+        expect(exception, isA<RequestRejectedException>());
       },
     );
 
@@ -239,6 +284,7 @@ Future<RemoteRepositoryPage> _search({
     return await DioGithubRemoteDataSource(
       dio,
       clock: _FakeClock(DateTime.utc(2026, 7, 23, 12)),
+      logger: RecordingAppLogger(),
     ).search(
       query: 'flutter',
       page: page,
@@ -255,6 +301,7 @@ Future<AppException> _searchError({
   required int statusCode,
   Map<String, List<String>> headers = const <String, List<String>>{},
   Object? body,
+  RecordingAppLogger? logger,
 }) async {
   final dio = Dio(BaseOptions(baseUrl: 'https://api.github.test'))
     ..httpClientAdapter = _JsonResponseAdapter(
@@ -266,6 +313,7 @@ Future<AppException> _searchError({
     await DioGithubRemoteDataSource(
       dio,
       clock: _FakeClock(now),
+      logger: logger ?? RecordingAppLogger(),
     ).search(
       query: 'flutter',
       page: 1,

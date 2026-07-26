@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
 import 'package:github_repository_explorer/core/error/app_exception.dart';
+import 'package:github_repository_explorer/core/error/failure.dart';
+import 'package:github_repository_explorer/core/logging/app_logger.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/dtos/github_search_response_dto.dart';
 
 // GitHub Search API exposes only the first 1,000 results of a search.
@@ -38,11 +40,16 @@ abstract interface class GithubRemoteDataSource {
 }
 
 final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
-  const DioGithubRemoteDataSource(this._dio, {required Clock clock})
-    : _clock = clock;
+  const DioGithubRemoteDataSource(
+    this._dio, {
+    required Clock clock,
+    required AppLogger logger,
+  }) : _clock = clock,
+       _logger = logger;
 
   final Dio _dio;
   final Clock _clock;
+  final AppLogger _logger;
 
   @override
   Future<RemoteRepositoryPage> search({
@@ -63,9 +70,19 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
       );
       final json = response.data;
       if (json == null) {
-        throw const ParsingException('GitHub returned an empty response.');
+        throw const ParsingException();
       }
-      final dto = GithubSearchResponseDto.fromJson(json);
+      late final GithubSearchResponseDto dto;
+      try {
+        dto = GithubSearchResponseDto.fromJson(json);
+      } on Object catch (error, stackTrace) {
+        _logger.error(
+          'GitHub returned an invalid search response.',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        throw const ParsingException();
+      }
       final hasNextPage =
           !dto.incompleteResults &&
           dto.items.length == pageSize &&
@@ -78,13 +95,16 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
         repositories: dto.items,
         hasNextPage: hasNextPage,
       );
-    } on DioException catch (error) {
+    } on DioException catch (error, stackTrace) {
       if (CancelToken.isCancel(error)) rethrow;
+      _logger.error(
+        'GitHub repository search request failed.',
+        error: error,
+        stackTrace: stackTrace,
+      );
       throw _mapDioException(error);
     } on AppException {
       rethrow;
-    } on Object catch (error) {
-      throw ParsingException('GitHub returned invalid data: $error');
     }
   }
 
@@ -108,13 +128,21 @@ final class DioGithubRemoteDataSource implements GithubRemoteDataSource {
     if (statusCode != null && statusCode >= 500) {
       return const ServerException();
     }
+    if (statusCode == 400 || statusCode == 422) {
+      return const ValidationException(
+        code: ValidationFailureCode.invalidInput,
+      );
+    }
+    if (statusCode != null && statusCode >= 400 && statusCode < 500) {
+      return const RequestRejectedException();
+    }
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
       return const NetworkException();
     }
-    return ServerException(error.message ?? 'GitHub request failed.');
+    return const ServerException();
   }
 
   DateTime? _retryAt(

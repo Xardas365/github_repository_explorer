@@ -4,13 +4,18 @@ import 'package:github_repository_explorer/features/repository_explorer/data/dat
 import 'package:github_repository_explorer/features/repository_explorer/data/database/cached_repository_model.dart';
 import 'package:test/test.dart';
 
+import '../../../helpers/test_logger.dart';
+
 void main() {
   late AppDatabase database;
   late DriftRepositoryLocalDataSource local;
 
   setUp(() {
     database = AppDatabase(NativeDatabase.memory());
-    local = DriftRepositoryLocalDataSource(database);
+    local = DriftRepositoryLocalDataSource(
+      database,
+      logger: RecordingAppLogger(),
+    );
   });
 
   tearDown(() => database.close());

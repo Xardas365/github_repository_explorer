@@ -15,7 +15,8 @@ final class SearchRepositories {
       return Stream.value(
         const Result.failure(
           Failure.validation(
-            message: 'Enter at least two characters to search.',
+            code: ValidationFailureCode.inputTooShort,
+            minimumLength: 2,
           ),
         ),
       );

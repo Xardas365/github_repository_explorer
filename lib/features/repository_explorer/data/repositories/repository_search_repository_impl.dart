@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
+import 'package:github_repository_explorer/core/error/app_exception.dart';
 import 'package:github_repository_explorer/core/error/failure.dart';
 import 'package:github_repository_explorer/core/error/failure_mapper.dart';
+import 'package:github_repository_explorer/core/logging/app_logger.dart';
 import 'package:github_repository_explorer/core/result/result.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/data_sources/github_remote_data_source.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/data_sources/repository_local_data_source.dart';
@@ -22,15 +24,18 @@ final class RepositorySearchRepositoryImpl
     required RepositoryLocalDataSource local,
     required CachePolicy cachePolicy,
     required Clock clock,
+    required AppLogger logger,
   }) : _remote = remote,
        _local = local,
        _cachePolicy = cachePolicy,
-       _clock = clock;
+       _clock = clock,
+       _logger = logger;
 
   final GithubRemoteDataSource _remote;
   final RepositoryLocalDataSource _local;
   final CachePolicy _cachePolicy;
   final Clock _clock;
+  final AppLogger _logger;
   DateTime? _rateLimitedUntil;
 
   @override
@@ -70,7 +75,7 @@ final class RepositorySearchRepositoryImpl
           controller.add(Result.success(cachedPage));
           if (!cachedPage.isStale) return;
         }
-      } on Object {
+      } on CacheException {
         cached = null;
       }
 
@@ -113,7 +118,7 @@ final class RepositorySearchRepositoryImpl
           await _local.writePage(query: request.query, page: cachePage);
           if (!_isActive(cancelToken, controller)) return;
           await _local.prune(olderThan: now.subtract(_cachePolicy.retainFor));
-        } on Object {
+        } on CacheException {
           // A cache write must not hide a valid network response.
         }
         if (!_isActive(cancelToken, controller)) return;
@@ -128,20 +133,22 @@ final class RepositorySearchRepositoryImpl
             ),
           ),
         );
-      } on Object catch (error) {
-        if (error is DioException && CancelToken.isCancel(error)) return;
+      } on DioException catch (error) {
+        if (CancelToken.isCancel(error)) return;
+        rethrow;
+      } on AppException catch (error) {
         if (!_isActive(cancelToken, controller)) return;
         final failure = mapExceptionToFailure(error);
         _rememberRateLimit(failure);
-        if (cached != null) {
-          controller.add(
-            Result.success(
-              _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
-            ),
-          );
-        } else {
-          controller.add(Result.failure(failure));
-        }
+        _addFailure(controller, cached, failure);
+      } on Exception catch (error, stackTrace) {
+        if (!_isActive(cancelToken, controller)) return;
+        _logger.error(
+          'Unexpected repository search failure.',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        _addFailure(controller, cached, const Failure.unexpected());
       }
     } finally {
       if (!controller.isClosed) {
@@ -157,6 +164,22 @@ final class RepositorySearchRepositoryImpl
       !cancelToken.isCancelled &&
       !controller.isClosed &&
       controller.hasListener;
+
+  void _addFailure(
+    StreamController<Result<RepositoryPage>> controller,
+    CachedRepositoryPage? cached,
+    Failure failure,
+  ) {
+    if (cached != null) {
+      controller.add(
+        Result.success(
+          _cachedPageToDomain(cached).copyWith(refreshFailure: failure),
+        ),
+      );
+    } else {
+      controller.add(Result.failure(failure));
+    }
+  }
 
   DateTime? _activeRateLimit() {
     final retryAt = _rateLimitedUntil;

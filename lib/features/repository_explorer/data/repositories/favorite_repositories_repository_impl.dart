@@ -1,5 +1,8 @@
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
+import 'package:github_repository_explorer/core/error/app_exception.dart';
+import 'package:github_repository_explorer/core/error/failure.dart';
 import 'package:github_repository_explorer/core/error/failure_mapper.dart';
+import 'package:github_repository_explorer/core/logging/app_logger.dart';
 import 'package:github_repository_explorer/core/result/result.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/data_sources/repository_local_data_source.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/mappers/repository_mapper.dart';
@@ -11,11 +14,14 @@ final class FavoriteRepositoriesRepositoryImpl
   const FavoriteRepositoriesRepositoryImpl({
     required RepositoryLocalDataSource local,
     required Clock clock,
+    required AppLogger logger,
   }) : _local = local,
-       _clock = clock;
+       _clock = clock,
+       _logger = logger;
 
   final RepositoryLocalDataSource _local;
   final Clock _clock;
+  final AppLogger _logger;
 
   @override
   Stream<Result<List<GithubRepository>>> watchFavorites() async* {
@@ -27,8 +33,15 @@ final class FavoriteRepositoriesRepositoryImpl
               .toList(growable: false),
         );
       }
-    } on Object catch (error) {
+    } on AppException catch (error) {
       yield Result.failure(mapExceptionToFailure(error));
+    } on Exception catch (error, stackTrace) {
+      _logger.error(
+        'Unexpected failure while watching favorite repositories.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      yield const Result.failure(Failure.unexpected());
     }
   }
 
@@ -46,8 +59,15 @@ final class FavoriteRepositoriesRepositoryImpl
         changedAt: now,
       );
       return const Result.success(null);
-    } on Object catch (error) {
+    } on AppException catch (error) {
       return Result.failure(mapExceptionToFailure(error));
+    } on Exception catch (error, stackTrace) {
+      _logger.error(
+        'Unexpected failure while updating a favorite repository.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return const Result.failure(Failure.unexpected());
     }
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/favorites/favorites_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/app_state_panel.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/content_width.dart';
+import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/failure_message.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/repository_card.dart';
 
 final class FavoritesPage extends StatelessWidget {
@@ -62,7 +63,9 @@ final class _FavoritesContent extends StatelessWidget {
       FavoritesStatus.failure => AppStatePanel(
         icon: Icons.error_outline,
         title: 'Favorites unavailable',
-        message: state.failure?.message ?? 'Saved repositories could not load.',
+        message: state.failure == null
+            ? 'Saved repositories could not load.'
+            : formatFailureMessage(context, state.failure!),
         actionLabel: 'Try again',
         onAction: () =>
             context.read<FavoritesBloc>().add(const FavoritesEvent.started()),

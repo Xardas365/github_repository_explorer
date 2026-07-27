@@ -55,14 +55,14 @@ extension SearchEventPatterns on SearchEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchQueryChanged value)?  queryChanged,TResult Function( SearchSubmitted value)?  submitted,TResult Function( SearchLoadNextPage value)?  loadNextPage,TResult Function( SearchRetried value)?  retried,TResult Function( SearchRefreshed value)?  refreshed,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchQueryChanged value)?  queryChanged,TResult Function( SearchSubmitted value)?  submitted,TResult Function( SearchLoadNextPage value)?  loadNextPage,TResult Function( SearchPageRetried value)?  retryPage,TResult Function( SearchRefreshed value)?  refreshed,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case SearchQueryChanged() when queryChanged != null:
 return queryChanged(_that);case SearchSubmitted() when submitted != null:
 return submitted(_that);case SearchLoadNextPage() when loadNextPage != null:
-return loadNextPage(_that);case SearchRetried() when retried != null:
-return retried(_that);case SearchRefreshed() when refreshed != null:
+return loadNextPage(_that);case SearchPageRetried() when retryPage != null:
+return retryPage(_that);case SearchRefreshed() when refreshed != null:
 return refreshed(_that);case _:
   return orElse();
 
@@ -81,14 +81,14 @@ return refreshed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchQueryChanged value)  queryChanged,required TResult Function( SearchSubmitted value)  submitted,required TResult Function( SearchLoadNextPage value)  loadNextPage,required TResult Function( SearchRetried value)  retried,required TResult Function( SearchRefreshed value)  refreshed,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchQueryChanged value)  queryChanged,required TResult Function( SearchSubmitted value)  submitted,required TResult Function( SearchLoadNextPage value)  loadNextPage,required TResult Function( SearchPageRetried value)  retryPage,required TResult Function( SearchRefreshed value)  refreshed,}){
 final _that = this;
 switch (_that) {
 case SearchQueryChanged():
 return queryChanged(_that);case SearchSubmitted():
 return submitted(_that);case SearchLoadNextPage():
-return loadNextPage(_that);case SearchRetried():
-return retried(_that);case SearchRefreshed():
+return loadNextPage(_that);case SearchPageRetried():
+return retryPage(_that);case SearchRefreshed():
 return refreshed(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -103,14 +103,14 @@ return refreshed(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchQueryChanged value)?  queryChanged,TResult? Function( SearchSubmitted value)?  submitted,TResult? Function( SearchLoadNextPage value)?  loadNextPage,TResult? Function( SearchRetried value)?  retried,TResult? Function( SearchRefreshed value)?  refreshed,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchQueryChanged value)?  queryChanged,TResult? Function( SearchSubmitted value)?  submitted,TResult? Function( SearchLoadNextPage value)?  loadNextPage,TResult? Function( SearchPageRetried value)?  retryPage,TResult? Function( SearchRefreshed value)?  refreshed,}){
 final _that = this;
 switch (_that) {
 case SearchQueryChanged() when queryChanged != null:
 return queryChanged(_that);case SearchSubmitted() when submitted != null:
 return submitted(_that);case SearchLoadNextPage() when loadNextPage != null:
-return loadNextPage(_that);case SearchRetried() when retried != null:
-return retried(_that);case SearchRefreshed() when refreshed != null:
+return loadNextPage(_that);case SearchPageRetried() when retryPage != null:
+return retryPage(_that);case SearchRefreshed() when refreshed != null:
 return refreshed(_that);case _:
   return null;
 
@@ -128,13 +128,13 @@ return refreshed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String query)?  queryChanged,TResult Function( String query)?  submitted,TResult Function()?  loadNextPage,TResult Function()?  retried,TResult Function()?  refreshed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String query)?  queryChanged,TResult Function( String query)?  submitted,TResult Function()?  loadNextPage,TResult Function( int page)?  retryPage,TResult Function()?  refreshed,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SearchQueryChanged() when queryChanged != null:
 return queryChanged(_that.query);case SearchSubmitted() when submitted != null:
 return submitted(_that.query);case SearchLoadNextPage() when loadNextPage != null:
-return loadNextPage();case SearchRetried() when retried != null:
-return retried();case SearchRefreshed() when refreshed != null:
+return loadNextPage();case SearchPageRetried() when retryPage != null:
+return retryPage(_that.page);case SearchRefreshed() when refreshed != null:
 return refreshed();case _:
   return orElse();
 
@@ -153,13 +153,13 @@ return refreshed();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String query)  queryChanged,required TResult Function( String query)  submitted,required TResult Function()  loadNextPage,required TResult Function()  retried,required TResult Function()  refreshed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String query)  queryChanged,required TResult Function( String query)  submitted,required TResult Function()  loadNextPage,required TResult Function( int page)  retryPage,required TResult Function()  refreshed,}) {final _that = this;
 switch (_that) {
 case SearchQueryChanged():
 return queryChanged(_that.query);case SearchSubmitted():
 return submitted(_that.query);case SearchLoadNextPage():
-return loadNextPage();case SearchRetried():
-return retried();case SearchRefreshed():
+return loadNextPage();case SearchPageRetried():
+return retryPage(_that.page);case SearchRefreshed():
 return refreshed();}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -174,13 +174,13 @@ return refreshed();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String query)?  queryChanged,TResult? Function( String query)?  submitted,TResult? Function()?  loadNextPage,TResult? Function()?  retried,TResult? Function()?  refreshed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String query)?  queryChanged,TResult? Function( String query)?  submitted,TResult? Function()?  loadNextPage,TResult? Function( int page)?  retryPage,TResult? Function()?  refreshed,}) {final _that = this;
 switch (_that) {
 case SearchQueryChanged() when queryChanged != null:
 return queryChanged(_that.query);case SearchSubmitted() when submitted != null:
 return submitted(_that.query);case SearchLoadNextPage() when loadNextPage != null:
-return loadNextPage();case SearchRetried() when retried != null:
-return retried();case SearchRefreshed() when refreshed != null:
+return loadNextPage();case SearchPageRetried() when retryPage != null:
+return retryPage(_that.page);case SearchRefreshed() when refreshed != null:
 return refreshed();case _:
   return null;
 
@@ -356,34 +356,68 @@ String toString() {
 /// @nodoc
 
 
-class SearchRetried implements SearchEvent {
-  const SearchRetried();
+class SearchPageRetried implements SearchEvent {
+  const SearchPageRetried(this.page);
   
 
+ final  int page;
 
-
+/// Create a copy of SearchEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchPageRetriedCopyWith<SearchPageRetried> get copyWith => _$SearchPageRetriedCopyWithImpl<SearchPageRetried>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchRetried);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchPageRetried&&(identical(other.page, page) || other.page == page));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,page);
 
 @override
 String toString() {
-  return 'SearchEvent.retried()';
+  return 'SearchEvent.retryPage(page: $page)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $SearchPageRetriedCopyWith<$Res> implements $SearchEventCopyWith<$Res> {
+  factory $SearchPageRetriedCopyWith(SearchPageRetried value, $Res Function(SearchPageRetried) _then) = _$SearchPageRetriedCopyWithImpl;
+@useResult
+$Res call({
+ int page
+});
 
 
+
+
+}
+/// @nodoc
+class _$SearchPageRetriedCopyWithImpl<$Res>
+    implements $SearchPageRetriedCopyWith<$Res> {
+  _$SearchPageRetriedCopyWithImpl(this._self, this._then);
+
+  final SearchPageRetried _self;
+  final $Res Function(SearchPageRetried) _then;
+
+/// Create a copy of SearchEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? page = null,}) {
+  return _then(SearchPageRetried(
+null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
 
 /// @nodoc
 
@@ -418,9 +452,287 @@ String toString() {
 
 
 /// @nodoc
+mixin _$SearchPageFailure {
+
+ int get page; Failure get failure;
+/// Create a copy of SearchPageFailure
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchPageFailureCopyWith<SearchPageFailure> get copyWith => _$SearchPageFailureCopyWithImpl<SearchPageFailure>(this as SearchPageFailure, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchPageFailure&&(identical(other.page, page) || other.page == page)&&(identical(other.failure, failure) || other.failure == failure));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,page,failure);
+
+@override
+String toString() {
+  return 'SearchPageFailure(page: $page, failure: $failure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchPageFailureCopyWith<$Res>  {
+  factory $SearchPageFailureCopyWith(SearchPageFailure value, $Res Function(SearchPageFailure) _then) = _$SearchPageFailureCopyWithImpl;
+@useResult
+$Res call({
+ int page, Failure failure
+});
+
+
+$FailureCopyWith<$Res> get failure;
+
+}
+/// @nodoc
+class _$SearchPageFailureCopyWithImpl<$Res>
+    implements $SearchPageFailureCopyWith<$Res> {
+  _$SearchPageFailureCopyWithImpl(this._self, this._then);
+
+  final SearchPageFailure _self;
+  final $Res Function(SearchPageFailure) _then;
+
+/// Create a copy of SearchPageFailure
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? page = null,Object? failure = null,}) {
+  return _then(_self.copyWith(
+page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int,failure: null == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure,
+  ));
+}
+/// Create a copy of SearchPageFailure
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FailureCopyWith<$Res> get failure {
+  
+  return $FailureCopyWith<$Res>(_self.failure, (value) {
+    return _then(_self.copyWith(failure: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [SearchPageFailure].
+extension SearchPageFailurePatterns on SearchPageFailure {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SearchPageFailure value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SearchPageFailure() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SearchPageFailure value)  $default,){
+final _that = this;
+switch (_that) {
+case _SearchPageFailure():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SearchPageFailure value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SearchPageFailure() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int page,  Failure failure)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SearchPageFailure() when $default != null:
+return $default(_that.page,_that.failure);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int page,  Failure failure)  $default,) {final _that = this;
+switch (_that) {
+case _SearchPageFailure():
+return $default(_that.page,_that.failure);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int page,  Failure failure)?  $default,) {final _that = this;
+switch (_that) {
+case _SearchPageFailure() when $default != null:
+return $default(_that.page,_that.failure);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _SearchPageFailure implements SearchPageFailure {
+  const _SearchPageFailure({required this.page, required this.failure});
+  
+
+@override final  int page;
+@override final  Failure failure;
+
+/// Create a copy of SearchPageFailure
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SearchPageFailureCopyWith<_SearchPageFailure> get copyWith => __$SearchPageFailureCopyWithImpl<_SearchPageFailure>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchPageFailure&&(identical(other.page, page) || other.page == page)&&(identical(other.failure, failure) || other.failure == failure));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,page,failure);
+
+@override
+String toString() {
+  return 'SearchPageFailure(page: $page, failure: $failure)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SearchPageFailureCopyWith<$Res> implements $SearchPageFailureCopyWith<$Res> {
+  factory _$SearchPageFailureCopyWith(_SearchPageFailure value, $Res Function(_SearchPageFailure) _then) = __$SearchPageFailureCopyWithImpl;
+@override @useResult
+$Res call({
+ int page, Failure failure
+});
+
+
+@override $FailureCopyWith<$Res> get failure;
+
+}
+/// @nodoc
+class __$SearchPageFailureCopyWithImpl<$Res>
+    implements _$SearchPageFailureCopyWith<$Res> {
+  __$SearchPageFailureCopyWithImpl(this._self, this._then);
+
+  final _SearchPageFailure _self;
+  final $Res Function(_SearchPageFailure) _then;
+
+/// Create a copy of SearchPageFailure
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? page = null,Object? failure = null,}) {
+  return _then(_SearchPageFailure(
+page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int,failure: null == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure,
+  ));
+}
+
+/// Create a copy of SearchPageFailure
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FailureCopyWith<$Res> get failure {
+  
+  return $FailureCopyWith<$Res>(_self.failure, (value) {
+    return _then(_self.copyWith(failure: value));
+  });
+}
+}
+
+/// @nodoc
 mixin _$SearchState {
 
- SearchStatus get status; String get query; List<GithubRepository> get repositories; int get currentPage; bool get hasReachedEnd; bool get isLoadingNextPage; bool get isRefreshing; bool get isFromCache; bool get isStale; DateTime? get fetchedAt; Failure? get failure; Failure? get refreshFailure; Failure? get paginationFailure;
+ SearchStatus get status; String get query; Map<int, RepositoryPage> get pages; int? get loadingPage; bool get isRefreshing; Failure? get failure; SearchPageFailure? get pageFailure;
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -431,16 +743,16 @@ $SearchStateCopyWith<SearchState> get copyWith => _$SearchStateCopyWithImpl<Sear
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchState&&(identical(other.status, status) || other.status == status)&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other.repositories, repositories)&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.hasReachedEnd, hasReachedEnd) || other.hasReachedEnd == hasReachedEnd)&&(identical(other.isLoadingNextPage, isLoadingNextPage) || other.isLoadingNextPage == isLoadingNextPage)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing)&&(identical(other.isFromCache, isFromCache) || other.isFromCache == isFromCache)&&(identical(other.isStale, isStale) || other.isStale == isStale)&&(identical(other.fetchedAt, fetchedAt) || other.fetchedAt == fetchedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refreshFailure, refreshFailure) || other.refreshFailure == refreshFailure)&&(identical(other.paginationFailure, paginationFailure) || other.paginationFailure == paginationFailure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchState&&(identical(other.status, status) || other.status == status)&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other.pages, pages)&&(identical(other.loadingPage, loadingPage) || other.loadingPage == loadingPage)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.pageFailure, pageFailure) || other.pageFailure == pageFailure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,query,const DeepCollectionEquality().hash(repositories),currentPage,hasReachedEnd,isLoadingNextPage,isRefreshing,isFromCache,isStale,fetchedAt,failure,refreshFailure,paginationFailure);
+int get hashCode => Object.hash(runtimeType,status,query,const DeepCollectionEquality().hash(pages),loadingPage,isRefreshing,failure,pageFailure);
 
 @override
 String toString() {
-  return 'SearchState(status: $status, query: $query, repositories: $repositories, currentPage: $currentPage, hasReachedEnd: $hasReachedEnd, isLoadingNextPage: $isLoadingNextPage, isRefreshing: $isRefreshing, isFromCache: $isFromCache, isStale: $isStale, fetchedAt: $fetchedAt, failure: $failure, refreshFailure: $refreshFailure, paginationFailure: $paginationFailure)';
+  return 'SearchState(status: $status, query: $query, pages: $pages, loadingPage: $loadingPage, isRefreshing: $isRefreshing, failure: $failure, pageFailure: $pageFailure)';
 }
 
 
@@ -451,11 +763,11 @@ abstract mixin class $SearchStateCopyWith<$Res>  {
   factory $SearchStateCopyWith(SearchState value, $Res Function(SearchState) _then) = _$SearchStateCopyWithImpl;
 @useResult
 $Res call({
- SearchStatus status, String query, List<GithubRepository> repositories, int currentPage, bool hasReachedEnd, bool isLoadingNextPage, bool isRefreshing, bool isFromCache, bool isStale, DateTime? fetchedAt, Failure? failure, Failure? refreshFailure, Failure? paginationFailure
+ SearchStatus status, String query, Map<int, RepositoryPage> pages, int? loadingPage, bool isRefreshing, Failure? failure, SearchPageFailure? pageFailure
 });
 
 
-$FailureCopyWith<$Res>? get failure;$FailureCopyWith<$Res>? get refreshFailure;$FailureCopyWith<$Res>? get paginationFailure;
+$FailureCopyWith<$Res>? get failure;$SearchPageFailureCopyWith<$Res>? get pageFailure;
 
 }
 /// @nodoc
@@ -468,22 +780,16 @@ class _$SearchStateCopyWithImpl<$Res>
 
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? query = null,Object? repositories = null,Object? currentPage = null,Object? hasReachedEnd = null,Object? isLoadingNextPage = null,Object? isRefreshing = null,Object? isFromCache = null,Object? isStale = null,Object? fetchedAt = freezed,Object? failure = freezed,Object? refreshFailure = freezed,Object? paginationFailure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? query = null,Object? pages = null,Object? loadingPage = freezed,Object? isRefreshing = null,Object? failure = freezed,Object? pageFailure = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as SearchStatus,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String,repositories: null == repositories ? _self.repositories : repositories // ignore: cast_nullable_to_non_nullable
-as List<GithubRepository>,currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
-as int,hasReachedEnd: null == hasReachedEnd ? _self.hasReachedEnd : hasReachedEnd // ignore: cast_nullable_to_non_nullable
-as bool,isLoadingNextPage: null == isLoadingNextPage ? _self.isLoadingNextPage : isLoadingNextPage // ignore: cast_nullable_to_non_nullable
-as bool,isRefreshing: null == isRefreshing ? _self.isRefreshing : isRefreshing // ignore: cast_nullable_to_non_nullable
-as bool,isFromCache: null == isFromCache ? _self.isFromCache : isFromCache // ignore: cast_nullable_to_non_nullable
-as bool,isStale: null == isStale ? _self.isStale : isStale // ignore: cast_nullable_to_non_nullable
-as bool,fetchedAt: freezed == fetchedAt ? _self.fetchedAt : fetchedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
-as Failure?,refreshFailure: freezed == refreshFailure ? _self.refreshFailure : refreshFailure // ignore: cast_nullable_to_non_nullable
-as Failure?,paginationFailure: freezed == paginationFailure ? _self.paginationFailure : paginationFailure // ignore: cast_nullable_to_non_nullable
-as Failure?,
+as String,pages: null == pages ? _self.pages : pages // ignore: cast_nullable_to_non_nullable
+as Map<int, RepositoryPage>,loadingPage: freezed == loadingPage ? _self.loadingPage : loadingPage // ignore: cast_nullable_to_non_nullable
+as int?,isRefreshing: null == isRefreshing ? _self.isRefreshing : isRefreshing // ignore: cast_nullable_to_non_nullable
+as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure?,pageFailure: freezed == pageFailure ? _self.pageFailure : pageFailure // ignore: cast_nullable_to_non_nullable
+as SearchPageFailure?,
   ));
 }
 /// Create a copy of SearchState
@@ -502,25 +808,13 @@ $FailureCopyWith<$Res>? get failure {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$FailureCopyWith<$Res>? get refreshFailure {
-    if (_self.refreshFailure == null) {
+$SearchPageFailureCopyWith<$Res>? get pageFailure {
+    if (_self.pageFailure == null) {
     return null;
   }
 
-  return $FailureCopyWith<$Res>(_self.refreshFailure!, (value) {
-    return _then(_self.copyWith(refreshFailure: value));
-  });
-}/// Create a copy of SearchState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$FailureCopyWith<$Res>? get paginationFailure {
-    if (_self.paginationFailure == null) {
-    return null;
-  }
-
-  return $FailureCopyWith<$Res>(_self.paginationFailure!, (value) {
-    return _then(_self.copyWith(paginationFailure: value));
+  return $SearchPageFailureCopyWith<$Res>(_self.pageFailure!, (value) {
+    return _then(_self.copyWith(pageFailure: value));
   });
 }
 }
@@ -604,10 +898,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SearchStatus status,  String query,  List<GithubRepository> repositories,  int currentPage,  bool hasReachedEnd,  bool isLoadingNextPage,  bool isRefreshing,  bool isFromCache,  bool isStale,  DateTime? fetchedAt,  Failure? failure,  Failure? refreshFailure,  Failure? paginationFailure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SearchStatus status,  String query,  Map<int, RepositoryPage> pages,  int? loadingPage,  bool isRefreshing,  Failure? failure,  SearchPageFailure? pageFailure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchState() when $default != null:
-return $default(_that.status,_that.query,_that.repositories,_that.currentPage,_that.hasReachedEnd,_that.isLoadingNextPage,_that.isRefreshing,_that.isFromCache,_that.isStale,_that.fetchedAt,_that.failure,_that.refreshFailure,_that.paginationFailure);case _:
+return $default(_that.status,_that.query,_that.pages,_that.loadingPage,_that.isRefreshing,_that.failure,_that.pageFailure);case _:
   return orElse();
 
 }
@@ -625,10 +919,10 @@ return $default(_that.status,_that.query,_that.repositories,_that.currentPage,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SearchStatus status,  String query,  List<GithubRepository> repositories,  int currentPage,  bool hasReachedEnd,  bool isLoadingNextPage,  bool isRefreshing,  bool isFromCache,  bool isStale,  DateTime? fetchedAt,  Failure? failure,  Failure? refreshFailure,  Failure? paginationFailure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SearchStatus status,  String query,  Map<int, RepositoryPage> pages,  int? loadingPage,  bool isRefreshing,  Failure? failure,  SearchPageFailure? pageFailure)  $default,) {final _that = this;
 switch (_that) {
 case _SearchState():
-return $default(_that.status,_that.query,_that.repositories,_that.currentPage,_that.hasReachedEnd,_that.isLoadingNextPage,_that.isRefreshing,_that.isFromCache,_that.isStale,_that.fetchedAt,_that.failure,_that.refreshFailure,_that.paginationFailure);case _:
+return $default(_that.status,_that.query,_that.pages,_that.loadingPage,_that.isRefreshing,_that.failure,_that.pageFailure);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -645,10 +939,10 @@ return $default(_that.status,_that.query,_that.repositories,_that.currentPage,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SearchStatus status,  String query,  List<GithubRepository> repositories,  int currentPage,  bool hasReachedEnd,  bool isLoadingNextPage,  bool isRefreshing,  bool isFromCache,  bool isStale,  DateTime? fetchedAt,  Failure? failure,  Failure? refreshFailure,  Failure? paginationFailure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SearchStatus status,  String query,  Map<int, RepositoryPage> pages,  int? loadingPage,  bool isRefreshing,  Failure? failure,  SearchPageFailure? pageFailure)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchState() when $default != null:
-return $default(_that.status,_that.query,_that.repositories,_that.currentPage,_that.hasReachedEnd,_that.isLoadingNextPage,_that.isRefreshing,_that.isFromCache,_that.isStale,_that.fetchedAt,_that.failure,_that.refreshFailure,_that.paginationFailure);case _:
+return $default(_that.status,_that.query,_that.pages,_that.loadingPage,_that.isRefreshing,_that.failure,_that.pageFailure);case _:
   return null;
 
 }
@@ -660,28 +954,22 @@ return $default(_that.status,_that.query,_that.repositories,_that.currentPage,_t
 
 
 class _SearchState implements SearchState {
-  const _SearchState({this.status = SearchStatus.initial, this.query = '', final  List<GithubRepository> repositories = const <GithubRepository>[], this.currentPage = 0, this.hasReachedEnd = false, this.isLoadingNextPage = false, this.isRefreshing = false, this.isFromCache = false, this.isStale = false, this.fetchedAt, this.failure, this.refreshFailure, this.paginationFailure}): _repositories = repositories;
+  const _SearchState({this.status = SearchStatus.initial, this.query = '', final  Map<int, RepositoryPage> pages = const <int, RepositoryPage>{}, this.loadingPage, this.isRefreshing = false, this.failure, this.pageFailure}): _pages = pages;
   
 
 @override@JsonKey() final  SearchStatus status;
 @override@JsonKey() final  String query;
- final  List<GithubRepository> _repositories;
-@override@JsonKey() List<GithubRepository> get repositories {
-  if (_repositories is EqualUnmodifiableListView) return _repositories;
+ final  Map<int, RepositoryPage> _pages;
+@override@JsonKey() Map<int, RepositoryPage> get pages {
+  if (_pages is EqualUnmodifiableMapView) return _pages;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_repositories);
+  return EqualUnmodifiableMapView(_pages);
 }
 
-@override@JsonKey() final  int currentPage;
-@override@JsonKey() final  bool hasReachedEnd;
-@override@JsonKey() final  bool isLoadingNextPage;
+@override final  int? loadingPage;
 @override@JsonKey() final  bool isRefreshing;
-@override@JsonKey() final  bool isFromCache;
-@override@JsonKey() final  bool isStale;
-@override final  DateTime? fetchedAt;
 @override final  Failure? failure;
-@override final  Failure? refreshFailure;
-@override final  Failure? paginationFailure;
+@override final  SearchPageFailure? pageFailure;
 
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
@@ -693,16 +981,16 @@ _$SearchStateCopyWith<_SearchState> get copyWith => __$SearchStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchState&&(identical(other.status, status) || other.status == status)&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other._repositories, _repositories)&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.hasReachedEnd, hasReachedEnd) || other.hasReachedEnd == hasReachedEnd)&&(identical(other.isLoadingNextPage, isLoadingNextPage) || other.isLoadingNextPage == isLoadingNextPage)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing)&&(identical(other.isFromCache, isFromCache) || other.isFromCache == isFromCache)&&(identical(other.isStale, isStale) || other.isStale == isStale)&&(identical(other.fetchedAt, fetchedAt) || other.fetchedAt == fetchedAt)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.refreshFailure, refreshFailure) || other.refreshFailure == refreshFailure)&&(identical(other.paginationFailure, paginationFailure) || other.paginationFailure == paginationFailure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchState&&(identical(other.status, status) || other.status == status)&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other._pages, _pages)&&(identical(other.loadingPage, loadingPage) || other.loadingPage == loadingPage)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.pageFailure, pageFailure) || other.pageFailure == pageFailure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,query,const DeepCollectionEquality().hash(_repositories),currentPage,hasReachedEnd,isLoadingNextPage,isRefreshing,isFromCache,isStale,fetchedAt,failure,refreshFailure,paginationFailure);
+int get hashCode => Object.hash(runtimeType,status,query,const DeepCollectionEquality().hash(_pages),loadingPage,isRefreshing,failure,pageFailure);
 
 @override
 String toString() {
-  return 'SearchState(status: $status, query: $query, repositories: $repositories, currentPage: $currentPage, hasReachedEnd: $hasReachedEnd, isLoadingNextPage: $isLoadingNextPage, isRefreshing: $isRefreshing, isFromCache: $isFromCache, isStale: $isStale, fetchedAt: $fetchedAt, failure: $failure, refreshFailure: $refreshFailure, paginationFailure: $paginationFailure)';
+  return 'SearchState(status: $status, query: $query, pages: $pages, loadingPage: $loadingPage, isRefreshing: $isRefreshing, failure: $failure, pageFailure: $pageFailure)';
 }
 
 
@@ -713,11 +1001,11 @@ abstract mixin class _$SearchStateCopyWith<$Res> implements $SearchStateCopyWith
   factory _$SearchStateCopyWith(_SearchState value, $Res Function(_SearchState) _then) = __$SearchStateCopyWithImpl;
 @override @useResult
 $Res call({
- SearchStatus status, String query, List<GithubRepository> repositories, int currentPage, bool hasReachedEnd, bool isLoadingNextPage, bool isRefreshing, bool isFromCache, bool isStale, DateTime? fetchedAt, Failure? failure, Failure? refreshFailure, Failure? paginationFailure
+ SearchStatus status, String query, Map<int, RepositoryPage> pages, int? loadingPage, bool isRefreshing, Failure? failure, SearchPageFailure? pageFailure
 });
 
 
-@override $FailureCopyWith<$Res>? get failure;@override $FailureCopyWith<$Res>? get refreshFailure;@override $FailureCopyWith<$Res>? get paginationFailure;
+@override $FailureCopyWith<$Res>? get failure;@override $SearchPageFailureCopyWith<$Res>? get pageFailure;
 
 }
 /// @nodoc
@@ -730,22 +1018,16 @@ class __$SearchStateCopyWithImpl<$Res>
 
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? query = null,Object? repositories = null,Object? currentPage = null,Object? hasReachedEnd = null,Object? isLoadingNextPage = null,Object? isRefreshing = null,Object? isFromCache = null,Object? isStale = null,Object? fetchedAt = freezed,Object? failure = freezed,Object? refreshFailure = freezed,Object? paginationFailure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? query = null,Object? pages = null,Object? loadingPage = freezed,Object? isRefreshing = null,Object? failure = freezed,Object? pageFailure = freezed,}) {
   return _then(_SearchState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as SearchStatus,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String,repositories: null == repositories ? _self._repositories : repositories // ignore: cast_nullable_to_non_nullable
-as List<GithubRepository>,currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
-as int,hasReachedEnd: null == hasReachedEnd ? _self.hasReachedEnd : hasReachedEnd // ignore: cast_nullable_to_non_nullable
-as bool,isLoadingNextPage: null == isLoadingNextPage ? _self.isLoadingNextPage : isLoadingNextPage // ignore: cast_nullable_to_non_nullable
-as bool,isRefreshing: null == isRefreshing ? _self.isRefreshing : isRefreshing // ignore: cast_nullable_to_non_nullable
-as bool,isFromCache: null == isFromCache ? _self.isFromCache : isFromCache // ignore: cast_nullable_to_non_nullable
-as bool,isStale: null == isStale ? _self.isStale : isStale // ignore: cast_nullable_to_non_nullable
-as bool,fetchedAt: freezed == fetchedAt ? _self.fetchedAt : fetchedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
-as Failure?,refreshFailure: freezed == refreshFailure ? _self.refreshFailure : refreshFailure // ignore: cast_nullable_to_non_nullable
-as Failure?,paginationFailure: freezed == paginationFailure ? _self.paginationFailure : paginationFailure // ignore: cast_nullable_to_non_nullable
-as Failure?,
+as String,pages: null == pages ? _self._pages : pages // ignore: cast_nullable_to_non_nullable
+as Map<int, RepositoryPage>,loadingPage: freezed == loadingPage ? _self.loadingPage : loadingPage // ignore: cast_nullable_to_non_nullable
+as int?,isRefreshing: null == isRefreshing ? _self.isRefreshing : isRefreshing // ignore: cast_nullable_to_non_nullable
+as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
+as Failure?,pageFailure: freezed == pageFailure ? _self.pageFailure : pageFailure // ignore: cast_nullable_to_non_nullable
+as SearchPageFailure?,
   ));
 }
 
@@ -765,25 +1047,13 @@ $FailureCopyWith<$Res>? get failure {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$FailureCopyWith<$Res>? get refreshFailure {
-    if (_self.refreshFailure == null) {
+$SearchPageFailureCopyWith<$Res>? get pageFailure {
+    if (_self.pageFailure == null) {
     return null;
   }
 
-  return $FailureCopyWith<$Res>(_self.refreshFailure!, (value) {
-    return _then(_self.copyWith(refreshFailure: value));
-  });
-}/// Create a copy of SearchState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$FailureCopyWith<$Res>? get paginationFailure {
-    if (_self.paginationFailure == null) {
-    return null;
-  }
-
-  return $FailureCopyWith<$Res>(_self.paginationFailure!, (value) {
-    return _then(_self.copyWith(paginationFailure: value));
+  return $SearchPageFailureCopyWith<$Res>(_self.pageFailure!, (value) {
+    return _then(_self.copyWith(pageFailure: value));
   });
 }
 }

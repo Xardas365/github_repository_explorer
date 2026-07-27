@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/favorites/favorites_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/bloc/search/search_bloc.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/app_state_panel.dart';
 import 'package:github_repository_explorer/features/repository_explorer/presentation/widgets/cache_status_banner.dart';
@@ -25,7 +24,91 @@ final class _SearchView extends StatefulWidget {
 
 final class _SearchViewState extends State<_SearchView> {
   final _searchController = TextEditingController();
-  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    final bloc = context.read<SearchBloc>()..add(const SearchEvent.refreshed());
+    await bloc.stream.firstWhere((state) => !state.isRefreshing);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 24),
+              Text(
+                'Explore GitHub',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Find public repositories, inspect the details, and keep '
+                'favorites available offline.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SearchInput(
+                controller: _searchController,
+                onChanged: (query) => context.read<SearchBloc>().add(
+                  SearchEvent.queryChanged(query),
+                ),
+                onSubmitted: (query) => context.read<SearchBloc>().add(
+                  SearchEvent.submitted(query),
+                ),
+                onCleared: () {
+                  _searchController.clear();
+                  context.read<SearchBloc>().add(
+                    const SearchEvent.queryChanged(''),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: BlocBuilder<SearchBloc, SearchState>(
+                  builder: (context, state) => SearchResults(
+                    key: ValueKey(state.query),
+                    state: state,
+                    onRefresh: _refresh,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class SearchResults extends StatefulWidget {
+  const SearchResults({
+    required this.state,
+    required this.onRefresh,
+    super.key,
+  });
+
+  final SearchState state;
+  final Future<void> Function() onRefresh;
+
+  @override
+  State<SearchResults> createState() => _SearchResultsState();
+}
+
+final class _SearchResultsState extends State<SearchResults> {
+  final _scrollController = ScrollController(keepScrollOffset: false);
 
   @override
   void initState() {
@@ -38,7 +121,6 @@ final class _SearchViewState extends State<_SearchView> {
     _scrollController
       ..removeListener(_loadMoreIfNeeded)
       ..dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -48,95 +130,9 @@ final class _SearchViewState extends State<_SearchView> {
     }
   }
 
-  Future<void> _refresh() async {
-    final bloc = context.read<SearchBloc>()..add(const SearchEvent.refreshed());
-    await bloc.stream.firstWhere((state) => !state.isRefreshing);
-  }
-
-  void _showFavoriteError(FavoritesState state) {
-    final failure = state.operationFailure;
-    if (failure == null) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(failure.message)));
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: BlocListener<FavoritesBloc, FavoritesState>(
-          listenWhen: (previous, current) =>
-              previous.operationFailure != current.operationFailure &&
-              current.operationFailure != null,
-          listener: (context, state) => _showFavoriteError(state),
-          child: ContentWidth(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 24),
-                Text(
-                  'Explore GitHub',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Find public repositories, inspect the details, and keep '
-                  'favorites available offline.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SearchInput(
-                  controller: _searchController,
-                  onChanged: (query) => context.read<SearchBloc>().add(
-                    SearchEvent.queryChanged(query),
-                  ),
-                  onSubmitted: (query) => context.read<SearchBloc>().add(
-                    SearchEvent.submitted(query),
-                  ),
-                  onCleared: () {
-                    _searchController.clear();
-                    context.read<SearchBloc>().add(
-                      const SearchEvent.queryChanged(''),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: BlocBuilder<SearchBloc, SearchState>(
-                    builder: (context, state) => _SearchResults(
-                      state: state,
-                      scrollController: _scrollController,
-                      onRefresh: _refresh,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-final class _SearchResults extends StatelessWidget {
-  const _SearchResults({
-    required this.state,
-    required this.scrollController,
-    required this.onRefresh,
-  });
-
-  final SearchState state;
-  final ScrollController scrollController;
-  final Future<void> Function() onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
+    final state = widget.state;
     switch (state.status) {
       case SearchStatus.initial:
         return AppStatePanel(
@@ -170,7 +166,7 @@ final class _SearchResults extends StatelessWidget {
               : formatFailureMessage(context, failure),
           actionLabel: 'Try again',
           onAction: () =>
-              context.read<SearchBloc>().add(const SearchEvent.retried()),
+              context.read<SearchBloc>().add(const SearchEvent.retryPage(1)),
         );
       case SearchStatus.success:
         return Column(
@@ -181,17 +177,17 @@ final class _SearchResults extends StatelessWidget {
                 fetchedAt: state.fetchedAt,
                 refreshFailure: state.refreshFailure,
                 onRetry: () => context.read<SearchBloc>().add(
-                  const SearchEvent.refreshed(),
+                  const SearchEvent.retryPage(1),
                 ),
               ),
               const SizedBox(height: 12),
             ],
             Expanded(
               child: RefreshIndicator(
-                onRefresh: onRefresh,
+                onRefresh: widget.onRefresh,
                 child: ListView.separated(
                   key: const PageStorageKey('repository-search-results'),
-                  controller: scrollController,
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 24),
                   itemCount: state.repositories.length + 1,
@@ -228,10 +224,14 @@ final class _PaginationFooter extends StatelessWidget {
       );
     }
     if (state.paginationFailure case final failure?) {
+      final failedPage = state.paginationFailurePage;
       return Center(
         child: TextButton.icon(
-          onPressed: () =>
-              context.read<SearchBloc>().add(const SearchEvent.retried()),
+          onPressed: failedPage == null
+              ? null
+              : () => context.read<SearchBloc>().add(
+                  SearchEvent.retryPage(failedPage),
+                ),
           icon: const Icon(Icons.refresh),
           label: Text('${formatFailureMessage(context, failure)} Retry'),
         ),

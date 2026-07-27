@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
+import 'package:github_repository_explorer/core/logging/app_logger.dart';
 import 'package:github_repository_explorer/core/network/dio_factory.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/data_sources/github_remote_data_source.dart';
 import 'package:github_repository_explorer/features/repository_explorer/data/data_sources/repository_local_data_source.dart';
@@ -23,15 +24,20 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton<Dio>(createDio)
     ..registerLazySingleton<Clock>(SystemClock.new)
     ..registerLazySingleton<CachePolicy>(CachePolicy.new)
+    ..registerLazySingleton<AppLogger>(DeveloperAppLogger.new)
     ..registerLazySingleton<AppDatabase>(
       () => AppDatabase(driftDatabase(name: 'github_repository_explorer')),
       dispose: (database) => database.close(),
     )
     ..registerLazySingleton<GithubRemoteDataSource>(
-      () => DioGithubRemoteDataSource(getIt(), clock: getIt()),
+      () => DioGithubRemoteDataSource(
+        getIt(),
+        clock: getIt(),
+        logger: getIt(),
+      ),
     )
     ..registerLazySingleton<RepositoryLocalDataSource>(
-      () => DriftRepositoryLocalDataSource(getIt()),
+      () => DriftRepositoryLocalDataSource(getIt(), logger: getIt()),
     )
     ..registerLazySingleton<RepositorySearchRepository>(
       () => RepositorySearchRepositoryImpl(
@@ -39,10 +45,15 @@ Future<void> configureDependencies() async {
         local: getIt(),
         cachePolicy: getIt(),
         clock: getIt(),
+        logger: getIt(),
       ),
     )
     ..registerLazySingleton<FavoriteRepositoriesRepository>(
-      () => FavoriteRepositoriesRepositoryImpl(local: getIt(), clock: getIt()),
+      () => FavoriteRepositoriesRepositoryImpl(
+        local: getIt(),
+        clock: getIt(),
+        logger: getIt(),
+      ),
     )
     ..registerLazySingleton(() => SearchRepositories(getIt()))
     ..registerLazySingleton(() => WatchFavorites(getIt()))

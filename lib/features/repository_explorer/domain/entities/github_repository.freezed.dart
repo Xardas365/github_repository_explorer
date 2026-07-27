@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GithubRepository {
 
- int get id; String get name; String get owner; String get description; int get stars; int get forks; int get openIssues; String? get language; Uri get githubUrl;
+ int get id; String get name; String get owner; String get description; int get stars; int get forks; int get openIssues; String? get language; Uri get githubUrl; DateTime get observedAt;
 /// Create a copy of GithubRepository
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $GithubRepositoryCopyWith<GithubRepository> get copyWith => _$GithubRepositoryCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GithubRepository&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.owner, owner) || other.owner == owner)&&(identical(other.description, description) || other.description == description)&&(identical(other.stars, stars) || other.stars == stars)&&(identical(other.forks, forks) || other.forks == forks)&&(identical(other.openIssues, openIssues) || other.openIssues == openIssues)&&(identical(other.language, language) || other.language == language)&&(identical(other.githubUrl, githubUrl) || other.githubUrl == githubUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GithubRepository&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.owner, owner) || other.owner == owner)&&(identical(other.description, description) || other.description == description)&&(identical(other.stars, stars) || other.stars == stars)&&(identical(other.forks, forks) || other.forks == forks)&&(identical(other.openIssues, openIssues) || other.openIssues == openIssues)&&(identical(other.language, language) || other.language == language)&&(identical(other.githubUrl, githubUrl) || other.githubUrl == githubUrl)&&(identical(other.observedAt, observedAt) || other.observedAt == observedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,owner,description,stars,forks,openIssues,language,githubUrl);
+int get hashCode => Object.hash(runtimeType,id,name,owner,description,stars,forks,openIssues,language,githubUrl,observedAt);
 
 @override
 String toString() {
-  return 'GithubRepository(id: $id, name: $name, owner: $owner, description: $description, stars: $stars, forks: $forks, openIssues: $openIssues, language: $language, githubUrl: $githubUrl)';
+  return 'GithubRepository(id: $id, name: $name, owner: $owner, description: $description, stars: $stars, forks: $forks, openIssues: $openIssues, language: $language, githubUrl: $githubUrl, observedAt: $observedAt)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $GithubRepositoryCopyWith<$Res>  {
   factory $GithubRepositoryCopyWith(GithubRepository value, $Res Function(GithubRepository) _then) = _$GithubRepositoryCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, String owner, String description, int stars, int forks, int openIssues, String? language, Uri githubUrl
+ int id, String name, String owner, String description, int stars, int forks, int openIssues, String? language, Uri githubUrl, DateTime observedAt
 });
 
 
@@ -62,7 +62,7 @@ class _$GithubRepositoryCopyWithImpl<$Res>
 
 /// Create a copy of GithubRepository
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? owner = null,Object? description = null,Object? stars = null,Object? forks = null,Object? openIssues = null,Object? language = freezed,Object? githubUrl = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? owner = null,Object? description = null,Object? stars = null,Object? forks = null,Object? openIssues = null,Object? language = freezed,Object? githubUrl = null,Object? observedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as int,forks: null == forks ? _self.forks : forks // ignore: cast_nullable_to_no
 as int,openIssues: null == openIssues ? _self.openIssues : openIssues // ignore: cast_nullable_to_non_nullable
 as int,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
 as String?,githubUrl: null == githubUrl ? _self.githubUrl : githubUrl // ignore: cast_nullable_to_non_nullable
-as Uri,
+as Uri,observedAt: null == observedAt ? _self.observedAt : observedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String owner,  String description,  int stars,  int forks,  int openIssues,  String? language,  Uri githubUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String owner,  String description,  int stars,  int forks,  int openIssues,  String? language,  Uri githubUrl,  DateTime observedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GithubRepository() when $default != null:
-return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_that.forks,_that.openIssues,_that.language,_that.githubUrl);case _:
+return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_that.forks,_that.openIssues,_that.language,_that.githubUrl,_that.observedAt);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String owner,  String description,  int stars,  int forks,  int openIssues,  String? language,  Uri githubUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String owner,  String description,  int stars,  int forks,  int openIssues,  String? language,  Uri githubUrl,  DateTime observedAt)  $default,) {final _that = this;
 switch (_that) {
 case _GithubRepository():
-return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_that.forks,_that.openIssues,_that.language,_that.githubUrl);case _:
+return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_that.forks,_that.openIssues,_that.language,_that.githubUrl,_that.observedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String owner,  String description,  int stars,  int forks,  int openIssues,  String? language,  Uri githubUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String owner,  String description,  int stars,  int forks,  int openIssues,  String? language,  Uri githubUrl,  DateTime observedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _GithubRepository() when $default != null:
-return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_that.forks,_that.openIssues,_that.language,_that.githubUrl);case _:
+return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_that.forks,_that.openIssues,_that.language,_that.githubUrl,_that.observedAt);case _:
   return null;
 
 }
@@ -214,7 +215,7 @@ return $default(_that.id,_that.name,_that.owner,_that.description,_that.stars,_t
 
 
 class _GithubRepository implements GithubRepository {
-  const _GithubRepository({required this.id, required this.name, required this.owner, required this.description, required this.stars, required this.forks, required this.openIssues, required this.language, required this.githubUrl});
+  const _GithubRepository({required this.id, required this.name, required this.owner, required this.description, required this.stars, required this.forks, required this.openIssues, required this.language, required this.githubUrl, required this.observedAt});
   
 
 @override final  int id;
@@ -226,6 +227,7 @@ class _GithubRepository implements GithubRepository {
 @override final  int openIssues;
 @override final  String? language;
 @override final  Uri githubUrl;
+@override final  DateTime observedAt;
 
 /// Create a copy of GithubRepository
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +239,16 @@ _$GithubRepositoryCopyWith<_GithubRepository> get copyWith => __$GithubRepositor
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GithubRepository&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.owner, owner) || other.owner == owner)&&(identical(other.description, description) || other.description == description)&&(identical(other.stars, stars) || other.stars == stars)&&(identical(other.forks, forks) || other.forks == forks)&&(identical(other.openIssues, openIssues) || other.openIssues == openIssues)&&(identical(other.language, language) || other.language == language)&&(identical(other.githubUrl, githubUrl) || other.githubUrl == githubUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GithubRepository&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.owner, owner) || other.owner == owner)&&(identical(other.description, description) || other.description == description)&&(identical(other.stars, stars) || other.stars == stars)&&(identical(other.forks, forks) || other.forks == forks)&&(identical(other.openIssues, openIssues) || other.openIssues == openIssues)&&(identical(other.language, language) || other.language == language)&&(identical(other.githubUrl, githubUrl) || other.githubUrl == githubUrl)&&(identical(other.observedAt, observedAt) || other.observedAt == observedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,owner,description,stars,forks,openIssues,language,githubUrl);
+int get hashCode => Object.hash(runtimeType,id,name,owner,description,stars,forks,openIssues,language,githubUrl,observedAt);
 
 @override
 String toString() {
-  return 'GithubRepository(id: $id, name: $name, owner: $owner, description: $description, stars: $stars, forks: $forks, openIssues: $openIssues, language: $language, githubUrl: $githubUrl)';
+  return 'GithubRepository(id: $id, name: $name, owner: $owner, description: $description, stars: $stars, forks: $forks, openIssues: $openIssues, language: $language, githubUrl: $githubUrl, observedAt: $observedAt)';
 }
 
 
@@ -257,7 +259,7 @@ abstract mixin class _$GithubRepositoryCopyWith<$Res> implements $GithubReposito
   factory _$GithubRepositoryCopyWith(_GithubRepository value, $Res Function(_GithubRepository) _then) = __$GithubRepositoryCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, String owner, String description, int stars, int forks, int openIssues, String? language, Uri githubUrl
+ int id, String name, String owner, String description, int stars, int forks, int openIssues, String? language, Uri githubUrl, DateTime observedAt
 });
 
 
@@ -274,7 +276,7 @@ class __$GithubRepositoryCopyWithImpl<$Res>
 
 /// Create a copy of GithubRepository
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? owner = null,Object? description = null,Object? stars = null,Object? forks = null,Object? openIssues = null,Object? language = freezed,Object? githubUrl = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? owner = null,Object? description = null,Object? stars = null,Object? forks = null,Object? openIssues = null,Object? language = freezed,Object? githubUrl = null,Object? observedAt = null,}) {
   return _then(_GithubRepository(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -285,7 +287,8 @@ as int,forks: null == forks ? _self.forks : forks // ignore: cast_nullable_to_no
 as int,openIssues: null == openIssues ? _self.openIssues : openIssues // ignore: cast_nullable_to_non_nullable
 as int,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
 as String?,githubUrl: null == githubUrl ? _self.githubUrl : githubUrl // ignore: cast_nullable_to_non_nullable
-as Uri,
+as Uri,observedAt: null == observedAt ? _self.observedAt : observedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 

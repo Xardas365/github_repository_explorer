@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:github_repository_explorer/core/cache/cache_policy.dart';
 import 'package:github_repository_explorer/core/error/app_exception.dart';
 import 'package:github_repository_explorer/core/error/failure.dart';
@@ -11,21 +14,26 @@ import 'package:github_repository_explorer/features/repository_explorer/domain/e
 import 'package:github_repository_explorer/features/repository_explorer/domain/entities/repository_search_request.dart';
 import 'package:test/test.dart';
 
+import '../../../helpers/test_logger.dart';
+
 void main() {
   late _FakeClock clock;
   late _FakeLocalDataSource local;
   late _FakeRemoteDataSource remote;
   late RepositorySearchRepositoryImpl repository;
+  late RecordingAppLogger logger;
 
   setUp(() {
     clock = _FakeClock(DateTime.utc(2026, 7, 23, 12));
     local = _FakeLocalDataSource();
     remote = _FakeRemoteDataSource((_, _, _) async => _remotePage);
+    logger = RecordingAppLogger();
     repository = RepositorySearchRepositoryImpl(
       remote: remote,
       local: local,
       cachePolicy: const CachePolicy(),
       clock: clock,
+      logger: logger,
     );
   });
 
@@ -60,6 +68,25 @@ void main() {
         .drain<void>();
 
     expect(requestedPageSize, 30);
+  });
+
+  test('preserves the network observation time in results and cache', () async {
+    final result = await repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .single;
+
+    expect(
+      result,
+      isA<Success<RepositoryPage>>().having(
+        (success) => success.data.repositories.single.observedAt,
+        'repository observedAt',
+        clock.current,
+      ),
+    );
+    expect(
+      local.pages['flutter:1']?.repositories.single.updatedAt,
+      clock.current,
+    );
   });
 
   test('stale cache is emitted before a remote refresh', () async {
@@ -246,6 +273,47 @@ void main() {
     );
     expect(remote.calls, 2);
   });
+
+  test('cancelling the result stream cancels the remote request', () async {
+    final started = Completer<void>();
+    remote.handler = (_, _, _) async {
+      started.complete();
+      final cancellation = await remote.lastCancelToken!.whenCancel;
+      throw cancellation;
+    };
+    final results = <Result<RepositoryPage>>[];
+    final subscription = repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .listen(results.add);
+    await started.future;
+
+    await subscription.cancel();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(remote.lastCancelToken?.isCancelled, isTrue);
+    expect(local.writeCalls, 0);
+    expect(results, isEmpty);
+  });
+
+  test('logs an unexpected exception and returns a safe failure', () async {
+    remote.handler = (_, _, _) async {
+      throw Exception('database-password-should-not-reach-ui');
+    };
+
+    final result = await repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .single;
+
+    expect(
+      result,
+      const Result<RepositoryPage>.failure(Failure.unexpected()),
+    );
+    expect(logger.errors, hasLength(1));
+    expect(
+      logger.errors.single.error.toString(),
+      contains('database-password-should-not-reach-ui'),
+    );
+  });
 }
 
 final class _FakeClock implements Clock {
@@ -262,20 +330,24 @@ final class _FakeRemoteDataSource implements GithubRemoteDataSource {
 
   Future<RemoteRepositoryPage> Function(String, int, int) handler;
   int calls = 0;
+  CancelToken? lastCancelToken;
 
   @override
   Future<RemoteRepositoryPage> search({
     required String query,
     required int page,
     required int pageSize,
+    required CancelToken cancelToken,
   }) {
     calls++;
+    lastCancelToken = cancelToken;
     return handler(query, page, pageSize);
   }
 }
 
 final class _FakeLocalDataSource implements RepositoryLocalDataSource {
   final Map<String, CachedRepositoryPage> pages = {};
+  int writeCalls = 0;
 
   @override
   Future<CachedRepositoryPage?> readPage({
@@ -288,6 +360,7 @@ final class _FakeLocalDataSource implements RepositoryLocalDataSource {
     required String query,
     required CachedRepositoryPage page,
   }) async {
+    writeCalls++;
     pages['$query:${page.page}'] = page;
   }
 
@@ -295,10 +368,11 @@ final class _FakeLocalDataSource implements RepositoryLocalDataSource {
   Future<void> prune({required DateTime olderThan}) async {}
 
   @override
-  Future<void> setFavorite(
-    CachedRepositoryModel repository, {
+  Future<void> setFavorite({
+    required int repositoryId,
     required bool isFavorite,
     required DateTime changedAt,
+    CachedRepositoryModel? repositorySnapshot,
   }) async {}
 
   @override

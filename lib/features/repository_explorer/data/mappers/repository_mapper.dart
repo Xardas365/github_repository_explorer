@@ -3,7 +3,7 @@ import 'package:github_repository_explorer/features/repository_explorer/data/dto
 import 'package:github_repository_explorer/features/repository_explorer/domain/entities/github_repository.dart';
 
 extension GithubRepositoryDtoMapper on GithubRepositoryDto {
-  GithubRepository toDomain() => GithubRepository(
+  GithubRepository toDomain({required DateTime observedAt}) => GithubRepository(
     id: id,
     name: name,
     owner: owner.login,
@@ -13,6 +13,7 @@ extension GithubRepositoryDtoMapper on GithubRepositoryDto {
     openIssues: openIssues,
     language: language,
     githubUrl: Uri.parse(htmlUrl),
+    observedAt: observedAt,
   );
 }
 
@@ -27,11 +28,12 @@ extension CachedRepositoryMapper on CachedRepositoryModel {
     openIssues: openIssues,
     language: language,
     githubUrl: Uri.parse(githubUrl),
+    observedAt: updatedAt,
   );
 }
 
 extension GithubRepositoryCacheMapper on GithubRepository {
-  CachedRepositoryModel toCache(DateTime updatedAt) => CachedRepositoryModel(
+  CachedRepositoryModel toCache() => CachedRepositoryModel(
     id: id,
     name: name,
     owner: owner,
@@ -41,6 +43,6 @@ extension GithubRepositoryCacheMapper on GithubRepository {
     openIssues: openIssues,
     language: language,
     githubUrl: githubUrl.toString(),
-    updatedAt: updatedAt,
+    updatedAt: observedAt,
   );
 }

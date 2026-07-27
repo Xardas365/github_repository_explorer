@@ -69,4 +69,48 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('formats every failure from typed safe data', (tester) async {
+    const failures = <Failure>[
+      Failure.network(),
+      Failure.server(),
+      Failure.requestRejected(),
+      Failure.cache(),
+      Failure.validation(
+        code: ValidationFailureCode.inputTooShort,
+        minimumLength: 2,
+      ),
+      Failure.validation(code: ValidationFailureCode.invalidInput),
+      Failure.unexpected(),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => SingleChildScrollView(
+            child: Column(
+              children: [
+                for (final failure in failures)
+                  Text(formatFailureMessage(context, failure)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.text('Unable to reach GitHub. Check your connection and try again.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('GitHub rejected the request. Check the search and try again.'),
+      findsOneWidget,
+    );
+    expect(find.text('Saved data could not be read.'), findsOneWidget);
+    expect(find.text('Enter at least 2 characters to search.'), findsOneWidget);
+    expect(
+      find.text('The search query is not valid. Adjust it and try again.'),
+      findsOneWidget,
+    );
+  });
 }

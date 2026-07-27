@@ -78,7 +78,7 @@ final class _SearchViewState extends State<_SearchView> {
               const SizedBox(height: 16),
               Expanded(
                 child: BlocBuilder<SearchBloc, SearchState>(
-                  builder: (context, state) => _SearchResults(
+                  builder: (context, state) => SearchResults(
                     key: ValueKey(state.query),
                     state: state,
                     onRefresh: _refresh,
@@ -93,8 +93,8 @@ final class _SearchViewState extends State<_SearchView> {
   }
 }
 
-final class _SearchResults extends StatefulWidget {
-  const _SearchResults({
+final class SearchResults extends StatefulWidget {
+  const SearchResults({
     required this.state,
     required this.onRefresh,
     super.key,
@@ -104,10 +104,10 @@ final class _SearchResults extends StatefulWidget {
   final Future<void> Function() onRefresh;
 
   @override
-  State<_SearchResults> createState() => _SearchResultsState();
+  State<SearchResults> createState() => _SearchResultsState();
 }
 
-final class _SearchResultsState extends State<_SearchResults> {
+final class _SearchResultsState extends State<SearchResults> {
   final _scrollController = ScrollController(keepScrollOffset: false);
 
   @override

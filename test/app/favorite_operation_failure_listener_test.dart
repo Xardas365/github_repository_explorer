@@ -36,8 +36,8 @@ void main() {
     );
     final messengerKey = GlobalKey<ScaffoldMessengerState>();
     await tester.pumpWidget(
-      BlocProvider.value(
-        value: bloc,
+      BlocProvider(
+        create: (_) => bloc,
         child: FavoriteOperationFailureListener(
           scaffoldMessengerKey: messengerKey,
           child: MaterialApp(
@@ -59,6 +59,8 @@ void main() {
 
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Saved data could not be read.'), findsOneWidget);
-    await bloc.close();
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 }

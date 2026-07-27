@@ -86,11 +86,13 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
-          builder: (context) => Column(
-            children: [
-              for (final failure in failures)
-                Text(formatFailureMessage(context, failure)),
-            ],
+          builder: (context) => SingleChildScrollView(
+            child: Column(
+              children: [
+                for (final failure in failures)
+                  Text(formatFailureMessage(context, failure)),
+              ],
+            ),
           ),
         ),
       ),

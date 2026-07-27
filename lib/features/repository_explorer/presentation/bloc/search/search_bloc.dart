@@ -210,6 +210,13 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
               pages.removeWhere((pageNumber, _) => pageNumber > data.page);
             }
             pages[data.page] = data;
+            var retainedPageFailure = state.pageFailure;
+            if (retainedPageFailure != null &&
+                (retainedPageFailure.page == data.page ||
+                    data.origin == DataOrigin.network &&
+                        retainedPageFailure.page > data.page)) {
+              retainedPageFailure = null;
+            }
             final repositories = _flattenPages(pages);
             final continuesRevalidation =
                 data.origin == DataOrigin.cache &&
@@ -226,9 +233,7 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
                 isRefreshing:
                     page == 1 && continuesRevalidation && preserveItems,
                 failure: null,
-                pageFailure: state.pageFailure?.page == page
-                    ? null
-                    : state.pageFailure,
+                pageFailure: retainedPageFailure,
               ),
             );
           case FailureResult<RepositoryPage>(:final failure):

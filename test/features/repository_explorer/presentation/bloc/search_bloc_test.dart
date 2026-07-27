@@ -502,6 +502,87 @@ void main() {
     await bloc.close();
   });
 
+  test('a successful refresh clears failures for invalidated pages', () async {
+    var firstPageAttempts = 0;
+    final refreshedRepository = sampleRepository.copyWith(name: 'refreshed');
+    when(() => repository.search(any())).thenAnswer((invocation) {
+      final request =
+          invocation.positionalArguments.single as RepositorySearchRequest;
+      if (request.page == 2) {
+        return Stream.value(
+          Result.success(
+            _repositoryPage(
+              repositories: [
+                sampleRepository.copyWith(id: 43, name: 'second'),
+              ],
+              page: 2,
+              hasNextPage: true,
+            ),
+          ),
+        );
+      }
+      if (request.page == 3) {
+        return Stream.value(const Result.failure(Failure.network()));
+      }
+      firstPageAttempts++;
+      return Stream.value(
+        Result.success(
+          _repositoryPage(
+            repositories: [
+              if (firstPageAttempts == 1)
+                sampleRepository
+              else
+                refreshedRepository,
+            ],
+            page: 1,
+            hasNextPage: firstPageAttempts == 1,
+          ),
+        ),
+      );
+    });
+    final bloc = buildBloc()..add(const SearchEvent.submitted('flutter'));
+    await bloc.stream
+        .firstWhere((state) => state.currentPage == 1)
+        .timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw StateError('Page 1: ${bloc.state}'),
+        );
+    bloc.add(const SearchEvent.loadNextPage());
+    await bloc.stream
+        .firstWhere((state) => state.currentPage == 2)
+        .timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw StateError('Page 2: ${bloc.state}'),
+        );
+    await Future<void>.delayed(Duration.zero);
+    bloc.add(const SearchEvent.loadNextPage());
+    await bloc.stream
+        .firstWhere((state) => state.paginationFailurePage == 3)
+        .timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw StateError('Page 3 failure: ${bloc.state}'),
+        );
+
+    bloc.add(const SearchEvent.refreshed());
+    await bloc.stream
+        .firstWhere(
+          (state) =>
+              !state.isRefreshing &&
+              state.repositories.length == 1 &&
+              state.repositories.single.name == 'refreshed',
+        )
+        .timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw StateError('Refresh: ${bloc.state}'),
+        );
+
+    expect(bloc.state.pages.keys, [1]);
+    expect(bloc.state.pageFailure, isNull);
+    expect(bloc.state.paginationFailure, isNull);
+    expect(bloc.state.hasReachedEnd, isTrue);
+    await bloc.close();
+  });
+
   blocTest<SearchBloc, SearchState>(
     'submit cancels a pending passive search for the normalized query',
     setUp: () {

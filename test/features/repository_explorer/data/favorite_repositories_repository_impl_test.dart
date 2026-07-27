@@ -10,7 +10,7 @@ import '../../../helpers/test_logger.dart';
 
 void main() {
   test('uses the snapshot observation time when adding a favorite', () async {
-    final observedAt = DateTime.utc(2026, 1, 1);
+    final observedAt = DateTime.utc(2026);
     final changedAt = DateTime.utc(2026, 1, 3);
     final local = _RecordingLocalDataSource();
     final repository = FavoriteRepositoriesRepositoryImpl(

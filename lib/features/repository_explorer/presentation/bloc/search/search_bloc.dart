@@ -143,7 +143,9 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
   }) async {
     final normalized = query.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (normalized.length < 2) {
-      _requestId++;
+      final requestId = ++_requestId;
+      await _cancelActiveSearch();
+      if (requestId != _requestId || emit.isDone) return;
       emit(SearchState(query: normalized));
       return;
     }
@@ -156,10 +158,7 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
     }
 
     final requestId = ++_requestId;
-    final previousSearch = _activeSearch;
-    if (previousSearch != null) {
-      await previousSearch.cancel();
-    }
+    await _cancelActiveSearch();
     if (requestId != _requestId || emit.isDone) return;
     _activeQuery = normalized;
     _activePage = page;
@@ -284,9 +283,17 @@ final class SearchBloc extends Bloc<SearchEvent, SearchState> {
   @override
   Future<void> close() async {
     _requestId++;
-    await _activeSearch?.cancel();
-    _activeSearch = null;
+    await _cancelActiveSearch();
     return super.close();
+  }
+
+  Future<void> _cancelActiveSearch() async {
+    final activeSearch = _activeSearch;
+    _activeSearch = null;
+    _activeQuery = null;
+    _activePage = null;
+    _activeRequestId = null;
+    await activeSearch?.cancel();
   }
 
   List<GithubRepository> _flattenPages(Map<int, RepositoryPage> pages) {

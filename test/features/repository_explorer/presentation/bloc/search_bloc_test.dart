@@ -692,6 +692,33 @@ void main() {
     await firstResults.close();
     await bloc.close();
   });
+
+  test('an invalid query cancels the active repository stream', () async {
+    final searchCancelled = Completer<void>();
+    final searchCalled = Completer<void>();
+    final results = StreamController<Result<RepositoryPage>>(
+      onCancel: searchCancelled.complete,
+    );
+    when(() => repository.search(any())).thenAnswer((_) {
+      searchCalled.complete();
+      return results.stream;
+    });
+    final bloc = buildBloc()..add(const SearchEvent.submitted('flutter'));
+    await searchCalled.future;
+
+    bloc.add(const SearchEvent.queryChanged(' '));
+    await searchCancelled.future.timeout(const Duration(seconds: 2));
+    await bloc.stream.firstWhere(
+      (state) =>
+          state.status == SearchStatus.initial &&
+          state.query.isEmpty &&
+          state.pages.isEmpty,
+    );
+
+    verify(() => repository.search(any())).called(1);
+    await results.close();
+    await bloc.close();
+  });
 }
 
 RepositoryPage _page(GithubRepository repository) => RepositoryPage(

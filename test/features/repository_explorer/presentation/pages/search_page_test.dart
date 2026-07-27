@@ -135,6 +135,7 @@ SearchState _successState({
             githubUrl: Uri.parse(
               'https://github.com/owner/repository-$index',
             ),
+            observedAt: DateTime.utc(2026),
           ),
         ),
         page: 1,

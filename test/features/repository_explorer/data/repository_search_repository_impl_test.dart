@@ -70,6 +70,25 @@ void main() {
     expect(requestedPageSize, 30);
   });
 
+  test('preserves the network observation time in results and cache', () async {
+    final result = await repository
+        .search(const RepositorySearchRequest(query: 'flutter'))
+        .single;
+
+    expect(
+      result,
+      isA<Success<RepositoryPage>>().having(
+        (success) => success.data.repositories.single.observedAt,
+        'repository observedAt',
+        clock.current,
+      ),
+    );
+    expect(
+      local.pages['flutter:1']?.repositories.single.updatedAt,
+      clock.current,
+    );
+  });
+
   test('stale cache is emitted before a remote refresh', () async {
     local.pages['flutter:1'] = _cachedPage(
       fetchedAt: clock.current.subtract(const Duration(minutes: 16)),
@@ -353,7 +372,7 @@ final class _FakeLocalDataSource implements RepositoryLocalDataSource {
     required int repositoryId,
     required bool isFavorite,
     required DateTime changedAt,
-    CachedRepositoryModel? repositoryIfMissing,
+    CachedRepositoryModel? repositorySnapshot,
   }) async {}
 
   @override

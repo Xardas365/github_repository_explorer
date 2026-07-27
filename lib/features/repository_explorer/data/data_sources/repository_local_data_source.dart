@@ -21,7 +21,7 @@ abstract interface class RepositoryLocalDataSource {
     required int repositoryId,
     required bool isFavorite,
     required DateTime changedAt,
-    CachedRepositoryModel? repositoryIfMissing,
+    CachedRepositoryModel? repositorySnapshot,
   });
 
   Future<void> prune({required DateTime olderThan});
@@ -177,19 +177,24 @@ final class DriftRepositoryLocalDataSource
     required int repositoryId,
     required bool isFavorite,
     required DateTime changedAt,
-    CachedRepositoryModel? repositoryIfMissing,
+    CachedRepositoryModel? repositorySnapshot,
   }) async {
     try {
       await _database.transaction(() async {
         if (isFavorite) {
-          final fallback = repositoryIfMissing;
-          if (fallback != null) {
-            await _database
-                .into(_database.cachedRepositories)
-                .insert(
-                  _toCompanion(fallback),
-                  mode: InsertMode.insertOrIgnore,
-                );
+          final snapshot = repositorySnapshot;
+          if (snapshot != null) {
+            final existing =
+                await (_database.select(_database.cachedRepositories)..where(
+                      (row) => row.id.equals(repositoryId),
+                    ))
+                    .getSingleOrNull();
+            if (existing == null ||
+                snapshot.updatedAt.isAfter(existing.updatedAt)) {
+              await _database
+                  .into(_database.cachedRepositories)
+                  .insertOnConflictUpdate(_toCompanion(snapshot));
+            }
           }
           await _database
               .into(_database.favoriteRepositories)

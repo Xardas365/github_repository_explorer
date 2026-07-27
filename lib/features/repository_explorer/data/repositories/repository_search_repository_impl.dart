@@ -104,11 +104,11 @@ final class RepositorySearchRepositoryImpl
         if (!_isActive(cancelToken, controller)) return;
         final now = _clock.now();
         final repositories = response.repositories
-            .map((dto) => dto.toDomain())
+            .map((dto) => dto.toDomain(observedAt: now))
             .toList(growable: false);
         final cachePage = CachedRepositoryPage(
           repositories: repositories
-              .map((repository) => repository.toCache(now))
+              .map((repository) => repository.toCache())
               .toList(growable: false),
           page: request.page,
           hasNextPage: response.hasNextPage,

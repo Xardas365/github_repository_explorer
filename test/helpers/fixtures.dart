@@ -10,4 +10,5 @@ final sampleRepository = GithubRepository(
   openIssues: 13000,
   language: 'Dart',
   githubUrl: Uri.parse('https://github.com/flutter/flutter'),
+  observedAt: DateTime.utc(2026),
 );

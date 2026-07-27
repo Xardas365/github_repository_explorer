@@ -61,7 +61,7 @@ void main() {
       );
       await local.setFavorite(
         repositoryId: repository.id,
-        repositoryIfMissing: repository,
+        repositorySnapshot: repository,
         isFavorite: true,
         changedAt: DateTime.utc(2026, 1, 2),
       );
@@ -86,7 +86,7 @@ void main() {
       );
       await local.setFavorite(
         repositoryId: repository.id,
-        repositoryIfMissing: repository,
+        repositorySnapshot: repository,
         isFavorite: true,
         changedAt: DateTime.utc(2026, 1, 2),
       );
@@ -123,7 +123,60 @@ void main() {
 
       await local.setFavorite(
         repositoryId: stale.id,
-        repositoryIfMissing: stale,
+        repositorySnapshot: stale,
+        isFavorite: true,
+        changedAt: DateTime.utc(2026, 1, 3),
+      );
+
+      final favorite = (await local.watchFavorites().first).single;
+      expect(favorite.stars, 1100);
+      expect(favorite.updatedAt.toUtc(), DateTime.utc(2026, 1, 2));
+    });
+
+    test('replaces an older canonical repository snapshot', () async {
+      final stale = _repository(6).copyWith(
+        stars: 1000,
+        updatedAt: DateTime.utc(2026),
+      );
+      final fresh = stale.copyWith(
+        stars: 1100,
+        updatedAt: DateTime.utc(2026, 1, 2),
+      );
+      await _writePage(
+        local,
+        query: 'stale',
+        repository: stale,
+        fetchedAt: stale.updatedAt,
+      );
+
+      await local.setFavorite(
+        repositoryId: fresh.id,
+        repositorySnapshot: fresh,
+        isFavorite: true,
+        changedAt: DateTime.utc(2026, 1, 3),
+      );
+
+      final favorite = (await local.watchFavorites().first).single;
+      expect(favorite.stars, 1100);
+      expect(favorite.updatedAt.toUtc(), DateTime.utc(2026, 1, 2));
+    });
+
+    test('does not replace an equally recent canonical snapshot', () async {
+      final current = _repository(7).copyWith(
+        stars: 1100,
+        updatedAt: DateTime.utc(2026, 1, 2),
+      );
+      final conflicting = current.copyWith(stars: 1000);
+      await _writePage(
+        local,
+        query: 'current',
+        repository: current,
+        fetchedAt: current.updatedAt,
+      );
+
+      await local.setFavorite(
+        repositoryId: conflicting.id,
+        repositorySnapshot: conflicting,
         isFavorite: true,
         changedAt: DateTime.utc(2026, 1, 3),
       );
@@ -134,7 +187,7 @@ void main() {
     });
 
     test('removing a favorite does not update its canonical row', () async {
-      final current = _repository(6).copyWith(
+      final current = _repository(8).copyWith(
         stars: 1100,
         updatedAt: DateTime.utc(2026, 1, 2),
       );
@@ -146,14 +199,14 @@ void main() {
       );
       await local.setFavorite(
         repositoryId: current.id,
-        repositoryIfMissing: current,
+        repositorySnapshot: current,
         isFavorite: true,
         changedAt: DateTime.utc(2026, 1, 3),
       );
 
       await local.setFavorite(
         repositoryId: current.id,
-        repositoryIfMissing: current.copyWith(
+        repositorySnapshot: current.copyWith(
           stars: 1000,
           updatedAt: DateTime.utc(2026, 1, 4),
         ),
@@ -171,13 +224,13 @@ void main() {
     });
 
     test(
-      'inserts a fallback snapshot when the repository is missing',
+      'inserts a snapshot when the repository is missing',
       () async {
-        final repository = _repository(7);
+        final repository = _repository(9);
 
         await local.setFavorite(
           repositoryId: repository.id,
-          repositoryIfMissing: repository,
+          repositorySnapshot: repository,
           isFavorite: true,
           changedAt: DateTime.utc(2026, 1, 2),
         );

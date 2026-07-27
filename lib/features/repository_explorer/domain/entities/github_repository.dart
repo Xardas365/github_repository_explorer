@@ -14,5 +14,6 @@ abstract class GithubRepository with _$GithubRepository {
     required int openIssues,
     required String? language,
     required Uri githubUrl,
+    required DateTime observedAt,
   }) = _GithubRepository;
 }
